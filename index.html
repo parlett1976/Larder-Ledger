@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<!-- saved from url=(0055)file:///C:/Users/jonat/Downloads/food_tracker_v4_3.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Larder Ledger</title>
+<style>
+  :root{
+    --bg: #FFFFFF;
+    --ink: #0E1A14;
+    --panel: #F4F6F2;
+    --primary: #0B3D2E;
+    --primary-dark: #06251B;
+    --accent: #B5541A;
+    --ok: #1B6B3C;
+    --ok-bg: #E4F3E8;
+    --warn: #9C5B00;
+    --warn-bg: #FFF1D6;
+    --danger: #A3241B;
+    --danger-bg: #FCE4E1;
+    --yellow: #FFD53D;
+    --border: #0E1A14;
+    --radius: 14px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --fs-base: 19px;
+    --fs-lg: 24px;
+    --fs-xl: 30px;
+  }
+  body.xl-text{ --fs-base: 23px; --fs-lg: 29px; --fs-xl: 36px; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:var(--fs-base);line-height:1.4;}
+  body{padding-bottom:30px;}
+  h1,h2,h3{margin:0;}
+  button{font-family:var(--font);cursor:pointer;}
+
+  .screen{display:none;padding:16px;max-width:640px;margin:0 auto;}
+  .screen.active{display:block;}
+
+  header.appbar{background:var(--primary);color:#fff;padding:16px 16px 14px;display:flex;align-items:center;gap:10px;justify-content:space-between;}
+  header.appbar .title{font-size:var(--fs-lg);font-weight:800;}
+  .icon-btn{background:rgba(255,255,255,0.15);color:#fff;border:2px solid rgba(255,255,255,0.4);border-radius:12px;padding:10px 14px;font-size:var(--fs-base);font-weight:700;min-height:52px;}
+
+  .bigbtn{display:block;width:100%;background:#fff;color:var(--ink);border:3px solid var(--border);border-radius:var(--radius);padding:20px 16px;font-size:var(--fs-lg);font-weight:800;text-align:left;margin-bottom:14px;min-height:76px;display:flex;align-items:center;gap:14px;}
+  .bigbtn .emoji{font-size:1.5em;flex-shrink:0;}
+  .bigbtn:active{background:var(--panel);}
+  .bigbtn.primary{background:var(--primary);color:#fff;border-color:var(--primary-dark);}
+  .bigbtn.primary:active{background:var(--primary-dark);}
+  .bigbtn.accent{background:var(--accent);color:#fff;border-color:#7a3610;}
+  .bigbtn.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok);}
+  .bigbtn.danger{background:var(--danger-bg);border-color:var(--danger);color:var(--danger);}
+  .bigbtn:disabled{opacity:0.4;}
+  .bigbtn.small{min-height:60px;font-size:var(--fs-base);padding:14px 16px;}
+  .link-btn{background:none;border:none;color:var(--primary);font-size:16px;font-weight:700;text-decoration:underline;padding:10px 0;}
+
+  .speak-block{background:var(--panel);border:2px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;font-size:var(--fs-lg);font-weight:700;}
+  .repeat-fab{position:fixed;right:16px;bottom:16px;z-index:80;background:var(--primary);color:#fff;border:3px solid var(--primary-dark);border-radius:50%;width:72px;height:72px;font-size:30px;box-shadow:0 3px 10px rgba(0,0,0,0.3);}
+
+  .section-title{font-size:var(--fs-xl);font-weight:800;margin-bottom:14px;}
+  .subtle{color:#4b5952;font-size:var(--fs-base);margin-bottom:16px;}
+
+  .field-block{margin-bottom:18px;}
+  .field-block label{display:block;font-weight:700;font-size:var(--fs-base);margin-bottom:6px;}
+  .field-block textarea{width:100%;padding:14px;border-radius:12px;border:3px solid var(--border);font-size:var(--fs-lg);}
+  .hint{font-size:15px;color:#4b5952;margin-top:6px;}
+
+  .item-card{background:#fff;border:3px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .item-card.status-review{background:var(--warn-bg);border-color:var(--warn);}
+  .item-card.new-item{border-left:10px solid var(--yellow);}
+  .item-card .iname{font-size:var(--fs-lg);font-weight:800;margin-bottom:4px;}
+  .item-card .imeta{font-size:var(--fs-base);font-weight:600;}
+  .item-card .imeta.urgency-red{color:var(--danger);}
+  .item-card .imeta.urgency-amber{color:var(--warn);}
+  .item-card .imeta.urgency-green{color:var(--ok);}
+  .item-card .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+  .item-card .actions button{padding:10px 14px;border-radius:10px;font-size:16px;font-weight:700;border:2px solid var(--border);background:#fff;}
+
+  .search-input{width:100%;padding:14px;border-radius:12px;border:3px solid var(--border);font-size:var(--fs-base);margin-bottom:16px;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:2px solid var(--panel);}
+  .toggle-row .tlabel{font-size:var(--fs-base);font-weight:700;}
+  .switch{position:relative;width:60px;height:34px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;inset:0;background:#ccc;border-radius:34px;transition:0.2s;border:2px solid var(--border);}
+  .slider::before{content:"";position:absolute;height:24px;width:24px;left:3px;top:2px;background:#fff;border-radius:50%;transition:0.2s;}
+  input:checked + .slider{background:var(--ok);}
+  input:checked + .slider::before{transform:translateX(26px);}
+
+  .spinner-overlay{position:fixed;inset:0;background:rgba(11,61,46,0.92);display:flex;align-items:center;justify-content:center;z-index:200;color:#fff;flex-direction:column;gap:16px;font-size:var(--fs-lg);text-align:center;padding:20px;}
+  .spinner{width:50px;height:50px;border-radius:50%;border:5px solid rgba(255,255,255,0.3);border-top-color:#fff;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .cal-dow{font-size:13px;text-align:center;color:#4b5952;font-weight:700;padding-bottom:4px;}
+  .cal-cell{aspect-ratio:1;background:#fff;border-radius:9px;border:2px solid var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px 2px;font-size:14px;font-weight:700;}
+  .cal-cell.today{border-color:var(--primary);border-width:3px;}
+  .cal-cell.selected{background:var(--ok-bg);}
+  .cal-dots{display:flex;gap:2px;margin-top:3px;flex-wrap:wrap;justify-content:center;}
+  .cal-dot{width:7px;height:7px;border-radius:50%;}
+  .cal-dot.urgency-red{background:var(--danger);}
+  .cal-dot.urgency-amber{background:var(--warn);}
+  .cal-dot.urgency-green{background:var(--ok);}
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .cal-header button{background:var(--panel);border:2px solid var(--border);border-radius:10px;font-size:22px;padding:6px 16px;}
+
+  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:20px;font-size:16px;z-index:150;opacity:0;transition:opacity 0.25s;pointer-events:none;font-weight:700;}
+  .toast.show{opacity:1;}
+  .photo-thumb{max-width:100%;max-height:220px;border-radius:10px;border:2px solid var(--border);margin:10px 0;display:block;}
+  .thumb-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;}
+  .thumb-row img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:2px solid var(--border);}
+
+  /* PRINT / PDF REPORTS */
+  #printArea{ display:none; }
+  body.printing > *:not(#printArea){ display:none !important; }
+  body.printing #printArea{ display:block; background:#fff; color:#000; padding:16px; }
+  #printArea h1{ font-size:22px; margin-bottom:4px; }
+  #printArea .print-sub{ font-size:13px; color:#333; margin-bottom:16px; }
+  #printArea table{ width:100%; border-collapse:collapse; table-layout:fixed; }
+  #printArea th, #printArea td{ border:1.5px solid #000; padding:6px; vertical-align:top; word-wrap:break-word; }
+  #printArea th{ background:#eee; font-size:13px; text-align:left; }
+  #printArea td.today-cell{ background:#F4F6F2; }
+  #printArea .cal-daynum{ font-weight:800; font-size:14px; margin-bottom:4px; }
+  #printArea .cal-item{ display:block; background:var(--yellow); font-weight:700; font-size:12.5px; padding:2px 5px; border-radius:4px; margin-bottom:3px; }
+  #printArea .big-row{ margin-bottom:26px; page-break-inside:avoid; }
+  #printArea .big-date{ background:var(--yellow); font-weight:800; font-size:40px; padding:4px 12px; display:inline-block; }
+  #printArea .big-items{ font-size:40px; font-weight:600; margin-top:8px; }
+  @media print{
+    @page{ margin:12mm; }
+    body.printing #printArea{ padding:0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <button class="icon-btn" id="homeBtn" onclick="goHome()" aria-label="Home">🏠 Home</button>
+  <div class="title">🥫 Larder Ledger</div>
+  <button class="icon-btn" id="menuBtn" onclick="showScreen(&#39;menu&#39;)" aria-label="Menu">☰ Menu</button>
+</header>
+
+<!-- HOME -->
+<section class="screen active" id="screen-home">
+  <div class="section-title">Add items</div>
+  <div class="subtle" id="sessionSummary">No items added yet this shop.</div>
+  <div id="pendingItemStatus"></div>
+
+  <button class="bigbtn primary" onclick="takePhoto(&#39;camera&#39;)"><span class="emoji">📷</span> Take Photo</button>
+  <button class="bigbtn small" id="btnAddNotes" onclick="showScreen(&#39;notes&#39;)" disabled=""><span class="emoji">📝</span> Add Notes to This Item</button>
+  <button class="bigbtn small" onclick="takePhoto(&#39;library&#39;)"><span class="emoji">🖼️</span> Upload Recent Photo</button>
+
+  <div style="margin-top:22px;">
+    <button class="bigbtn accent" onclick="finishShop()"><span class="emoji">🏁</span> Finish Shop &amp; Prepare for Computer</button>
+  </div>
+
+  <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none;">
+  <input type="file" accept="image/*" id="libraryInput" style="display:none;">
+</section>
+
+<!-- PHOTO OPTIONS (shown right after any photo is taken) -->
+<section class="screen" id="screen-photo-options">
+  <div class="section-title">Photo added</div>
+  <img id="lastPhotoThumb" class="photo-thumb">
+  <div class="thumb-row" id="allPhotosRow"></div>
+  <button class="bigbtn small" onclick="retakeCurrentPhoto()"><span class="emoji">🔄</span> Retake Photo</button>
+  <button class="bigbtn small" onclick="takeAnotherPhoto()"><span class="emoji">➕</span> Take Another Photo of This Item</button>
+  <button class="bigbtn ok" onclick="finishItemAndReturn()"><span class="emoji">✅</span> Done — Save Item &amp; Return to Main Screen</button>
+</section>
+
+<!-- NOTES -->
+<section class="screen" id="screen-notes">
+  <div class="section-title">Add a note</div>
+  <div class="field-block">
+    <label for="notesInput">Note for this item</label>
+    <textarea id="notesInput" rows="4" placeholder="Tap here, then use your keyboard&#39;s microphone button to dictate"></textarea>
+    <div class="hint">Tip: tap the text box, then tap the microphone icon on your iPhone's own keyboard to speak instead of typing.</div>
+  </div>
+  <button class="bigbtn small" onclick="speak(document.getElementById(&#39;notesInput&#39;).value || &#39;No note has been entered yet&#39;)"><span class="emoji">🔊</span> Read note back to me</button>
+  <button class="bigbtn ok" onclick="saveNoteAndReturn()"><span class="emoji">✅</span> Save Note</button>
+</section>
+
+<!-- MENU -->
+<section class="screen" id="screen-menu">
+  <div class="section-title">Menu</div>
+  <button class="bigbtn" onclick="showScreen(&#39;list&#39;)"><span class="emoji">📋</span> My List</button>
+  <button class="bigbtn" onclick="showScreen(&#39;calendar&#39;)"><span class="emoji">📅</span> Calendar</button>
+  <button class="bigbtn" onclick="showScreen(&#39;reports&#39;)"><span class="emoji">🖨️</span> Print / PDF Reports</button>
+  <button class="bigbtn" onclick="showScreen(&#39;review&#39;)"><span class="emoji">📤</span> Needs Review <span id="reviewBadge"></span></button>
+  <button class="bigbtn" onclick="showScreen(&#39;frequent&#39;)"><span class="emoji">⭐</span> Frequently Bought</button>
+  <button class="bigbtn" onclick="showScreen(&#39;backup&#39;)"><span class="emoji">💾</span> Backup &amp; Sync</button>
+  <button class="bigbtn" onclick="showScreen(&#39;settings&#39;)"><span class="emoji">⚙️</span> Settings</button>
+</section>
+
+<!-- LIST -->
+<section class="screen" id="screen-list">
+  <div class="section-title">My List</div>
+  <div class="subtle">Items appear here once they've been read on your computer and imported back in.</div>
+  <button class="bigbtn small" onclick="readOutList()"><span class="emoji">🔊</span> Read my list aloud</button>
+  <input type="text" class="search-input" id="listSearch" placeholder="Search items…" oninput="renderList()">
+  <div id="listContainer"></div>
+</section>
+
+<!-- CALENDAR -->
+<section class="screen" id="screen-calendar">
+  <div class="section-title">Calendar</div>
+  <div class="cal-header">
+    <button onclick="calShiftMonth(-1)" aria-label="Previous month">‹</button>
+    <strong id="calMonthLabel"></strong>
+    <button onclick="calShiftMonth(1)" aria-label="Next month">›</button>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+  <div id="calDayDetail" style="margin-top:16px;"></div>
+</section>
+
+<!-- REPORTS -->
+<section class="screen" id="screen-reports">
+  <div class="section-title">Print / PDF Reports</div>
+  <div class="subtle">Makes a printable page from your list. On the "Save as PDF" or "Print" screen that opens, use the Share button to save it to Files, or send it to a printer.</div>
+  <button class="bigbtn primary" onclick="printReport(&#39;calendar&#39;)"><span class="emoji">📅</span> Calendar Report</button>
+  <button class="bigbtn primary" onclick="printReport(&#39;biglist&#39;)"><span class="emoji">🔠</span> Big-Print List</button>
+</section>
+
+<!-- REVIEW NEEDED -->
+<section class="screen" id="screen-review">
+  <div class="section-title">Needs Review</div>
+  <div class="subtle">These items haven't been read yet. Send the photos to your computer, get Claude to read them, then bring the results back here.</div>
+  <button class="bigbtn accent" id="btnSendPhotos" onclick="exportReviewZip()"><span class="emoji">📤</span> Send Photos to My Computer</button>
+  <button class="bigbtn small" onclick="document.getElementById(&#39;importResultsInput&#39;).click()"><span class="emoji">📥</span> Import Results from Computer</button>
+  <input type="file" accept="application/json" id="importResultsInput" style="display:none;" onchange="importReviewResults(event)">
+  <div id="reviewContainer" style="margin-top:16px;"></div>
+</section>
+
+<!-- FREQUENT -->
+<section class="screen" id="screen-frequent">
+  <div class="section-title">Frequently Bought</div>
+  <div class="subtle">Builds up automatically as items are confirmed.</div>
+  <div id="freqContainer"></div>
+</section>
+
+<!-- BACKUP -->
+<section class="screen" id="screen-backup">
+  <div class="section-title">Backup &amp; Sync</div>
+  <div class="subtle">Export a backup file here, then import it on your other device to bring your data across. Nothing is deleted when importing.</div>
+  <button class="bigbtn ok" onclick="exportBackup()"><span class="emoji">💾</span> Export Backup File</button>
+  <button class="bigbtn small" onclick="document.getElementById(&#39;importInput&#39;).click()"><span class="emoji">📥</span> Import Backup File</button>
+  <input type="file" accept="application/json" id="importInput" style="display:none;" onchange="importBackup(event)">
+  <button class="bigbtn danger" onclick="clearAllData()"><span class="emoji">⚠️</span> Clear All Data</button>
+</section>
+
+<!-- SETTINGS -->
+<section class="screen" id="screen-settings">
+  <div class="section-title">Settings</div>
+  <div class="toggle-row">
+    <div class="tlabel">🔊 Speak prompts aloud</div>
+    <label class="switch"><input type="checkbox" id="toggleSpeech" onchange="saveSettings()"><span class="slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <div class="tlabel">🔤 Extra large text</div>
+    <label class="switch"><input type="checkbox" id="toggleXL" onchange="saveSettings()"><span class="slider"></span></label>
+  </div>
+</section>
+
+<button class="repeat-fab" onclick="repeatLastSpeech()" aria-label="Repeat last message">🔊</button>
+<div class="toast" id="toast"></div>
+<div id="printArea"></div>
+
+<script src="./Larder Ledger_files/jszip.min.js.download"></script>
+<script>
+/* =========================================================
+   STATE & STORAGE
+========================================================= */
+const K_ITEMS = 'larderLedger3.items';
+const K_HISTORY = 'larderLedger3.history';
+const K_SETTINGS = 'larderLedger3.settings';
+
+let state = { items: [], history: {} };
+let settings = { speech: true, xl: false };
+
+function loadAll(){
+  try{ state.items = JSON.parse(localStorage.getItem(K_ITEMS)) || []; }catch(e){ state.items = []; }
+  try{ state.history = JSON.parse(localStorage.getItem(K_HISTORY)) || {}; }catch(e){ state.history = {}; }
+  try{ settings = Object.assign(settings, JSON.parse(localStorage.getItem(K_SETTINGS)) || {}); }catch(e){}
+  purgeExpired();
+  applySettingsToUI();
+}
+function saveState(){
+  localStorage.setItem(K_ITEMS, JSON.stringify(state.items));
+  localStorage.setItem(K_HISTORY, JSON.stringify(state.history));
+}
+function saveSettings(){
+  settings.speech = document.getElementById('toggleSpeech').checked;
+  settings.xl = document.getElementById('toggleXL').checked;
+  localStorage.setItem(K_SETTINGS, JSON.stringify(settings));
+  applySettingsToUI();
+}
+function applySettingsToUI(){
+  document.getElementById('toggleSpeech').checked = settings.speech;
+  document.getElementById('toggleXL').checked = settings.xl;
+  document.body.classList.toggle('xl-text', settings.xl);
+}
+function purgeExpired(){
+  const today = startOfToday();
+  state.items = state.items.filter(it => {
+    if(it.status === 'needs_review') return true;
+    const d = new Date(it.expiryDate + 'T00:00:00');
+    return d >= today;
+  });
+}
+function uid(){ if(crypto && crypto.randomUUID) return crypto.randomUUID(); return 'id-'+Date.now()+'-'+Math.random().toString(16).slice(2); }
+function startOfToday(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+function daysUntil(iso){ const d=new Date(iso+'T00:00:00'); return Math.round((d-startOfToday())/86400000); }
+function urgencyClass(iso){ const n=daysUntil(iso); if(n<=2) return 'urgency-red'; if(n<=5) return 'urgency-amber'; return 'urgency-green'; }
+function formatDaysLabel(iso){ const n=daysUntil(iso); if(n<0) return 'expired'; if(n===0) return 'today'; if(n===1) return 'tomorrow'; return n+' days'; }
+function formatDatePretty(iso){ const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function escapeHtml(str){ const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* =========================================================
+   SPEECH
+========================================================= */
+let lastSpeech = '';
+function speak(text){
+  lastSpeech = text;
+  if(!settings.speech) return;
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95;
+  window.speechSynthesis.speak(u);
+}
+function repeatLastSpeech(){
+  if(!lastSpeech){ toast('Nothing to repeat yet'); return; }
+  const wasOn = settings.speech; settings.speech = true; speak(lastSpeech); settings.speech = wasOn;
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  if(name==='list'){ renderList(); speak('Your list, sorted by soonest date first.'); }
+  if(name==='calendar'){ renderCalendar(); speak('Calendar view.'); }
+  if(name==='reports'){ speak('Print or P D F reports. Choose calendar report or big print list.'); }
+  if(name==='review'){ renderReview(); }
+  if(name==='frequent'){ renderFrequent(); }
+  if(name==='menu'){ speak('Menu.'); }
+}
+function goHome(){ showScreen('home'); refreshHome(); }
+
+/* =========================================================
+   CAPTURE SESSION
+========================================================= */
+let currentItem = null;
+let sessionAdded = [];
+
+function startNewItem(){
+  currentItem = { id: uid(), notes:'', photos:[] };
+}
+startNewItem();
+
+function refreshHome(){
+  document.getElementById('btnAddNotes').disabled = !(currentItem && currentItem.photos.length>0);
+  const summary = document.getElementById('sessionSummary');
+  summary.textContent = sessionAdded.length===0 ? 'No items added yet this shop.' : `${sessionAdded.length} item${sessionAdded.length>1?'s':''} added this shop.`;
+  const statusEl = document.getElementById('pendingItemStatus');
+  if(currentItem && currentItem.photos.length>0){
+    statusEl.innerHTML = `<div class="subtle">Current item in progress: ${currentItem.photos.length} photo${currentItem.photos.length>1?'s':''} taken. <button class="link-btn" onclick="discardCurrentItem()">Discard &amp; start over</button></div>`;
+  } else {
+    statusEl.innerHTML = '';
+  }
+}
+function discardCurrentItem(){
+  startNewItem();
+  refreshHome();
+  toast('Discarded');
+}
+
+function takePhoto(target){
+  if(target === 'library') document.getElementById('libraryInput').click();
+  else document.getElementById('cameraInput').click();
+}
+document.getElementById('cameraInput').addEventListener('change', e=>handlePhotoFile(e.target.files[0]));
+document.getElementById('libraryInput').addEventListener('change', e=>handlePhotoFile(e.target.files[0]));
+
+function handlePhotoFile(file){
+  if(!file) return;
+  if(!currentItem) startNewItem();
+  showSpinner('Adding photo…');
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    downscale(e.target.result, 1400).then(dataUrl=>{
+      currentItem.photos.push(dataUrl);
+      hideSpinner();
+      showPhotoOptions();
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function downscale(dataUrl, maxWidth){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let w=img.width, h=img.height;
+      if(w>maxWidth){ h=Math.round(h*(maxWidth/w)); w=maxWidth; }
+      const canvas = document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.src = dataUrl;
+  });
+}
+
+function showPhotoOptions(){
+  const last = currentItem.photos[currentItem.photos.length-1];
+  document.getElementById('lastPhotoThumb').src = last;
+  const row = document.getElementById('allPhotosRow');
+  row.innerHTML = currentItem.photos.map(p=>`<img src="${p}">`).join('');
+  showScreen('photo-options');
+  const count = currentItem.photos.length;
+  speak(count>1 ? `Photo ${count} added. You can retake it, take another photo of this item, or finish and save.` : 'Photo added. You can retake it, take another photo of this item, or finish and save.');
+}
+
+function retakeCurrentPhoto(){
+  currentItem.photos.pop();
+  takePhoto('camera');
+}
+function takeAnotherPhoto(){
+  takePhoto('camera');
+}
+function finishItemAndReturn(){
+  if(currentItem.photos.length===0){ goHome(); return; }
+  const item = {
+    id: currentItem.id,
+    name: null,
+    dateType: null,
+    expiryDate: null,
+    notes: currentItem.notes,
+    photos: currentItem.photos,
+    status: 'needs_review',
+    addedAt: Date.now(),
+    isNew: true
+  };
+  state.items.push(item);
+  sessionAdded.push(item.id);
+  saveState();
+  toast('Item saved');
+  speak('Item saved. Ready for the next one.');
+  startNewItem();
+  showScreen('home');
+  refreshHome();
+}
+
+/* =========================================================
+   NOTES
+========================================================= */
+function saveNoteAndReturn(){
+  currentItem.notes = document.getElementById('notesInput').value.trim();
+  document.getElementById('notesInput').value = '';
+  speak('Note saved.');
+  showScreen('home');
+  refreshHome();
+}
+
+/* =========================================================
+   FINISH SHOP
+========================================================= */
+function finishShop(){
+  const pendingCount = state.items.filter(i=>i.status==='needs_review').length;
+  showScreen('review');
+  if(pendingCount===0){
+    speak('No items are waiting to be read yet.');
+  } else {
+    speak(`${pendingCount} item${pendingCount>1?'s are':' is'} waiting to be read. Send the photos to your computer when you're ready.`);
+  }
+  sessionAdded = [];
+}
+
+/* =========================================================
+   LIST
+========================================================= */
+function renderList(){
+  const container = document.getElementById('listContainer');
+  const query = (document.getElementById('listSearch').value || '').toLowerCase();
+  let items = state.items.filter(it => it.status==='confirmed' && it.name && it.name.toLowerCase().includes(query));
+  items.sort((a,b)=>(a.expiryDate||'').localeCompare(b.expiryDate||''));
+  if(items.length===0){
+    container.innerHTML = `<div class="subtle">Nothing confirmed yet. Items appear here once read on your computer and imported back.</div>`;
+    return;
+  }
+  container.innerHTML = items.map(it=>{
+    const urg = urgencyClass(it.expiryDate);
+    return `<div class="item-card ${it.isNew?'new-item':''}">
+      <div class="iname">${escapeHtml(it.name)}</div>
+      <div class="imeta ${urg}">${it.dateType}: ${formatDatePretty(it.expiryDate)} — ${formatDaysLabel(it.expiryDate)}</div>
+      ${it.notes?`<div class="hint">${escapeHtml(it.notes)}</div>`:''}
+      <div class="actions">
+        ${it.isNew?`<button onclick="markReviewed('${it.id}')">Mark reviewed</button>`:''}
+        <button onclick="deleteItem('${it.id}')">Delete</button>
+      </div></div>`;
+  }).join('');
+}
+function readOutList(){
+  const items = state.items.filter(it=>it.status==='confirmed').sort((a,b)=>(a.expiryDate||'').localeCompare(b.expiryDate||''));
+  if(items.length===0){ speak('Your list is empty.'); return; }
+  const parts = items.slice(0,15).map(it=>`${it.name}, ${formatDaysLabel(it.expiryDate)}`);
+  speak(`You have ${items.length} items. ${parts.join('. ')}.`);
+}
+function markReviewed(id){ const it=state.items.find(i=>i.id===id); if(it){ it.isNew=false; saveState(); renderList(); } }
+function deleteItem(id){ if(!confirm('Delete this item?')) return; state.items=state.items.filter(i=>i.id!==id); saveState(); renderList(); renderCalendar(); renderReview(); }
+
+/* =========================================================
+   CALENDAR
+========================================================= */
+let calDate = new Date(); calDate.setDate(1);
+function calShiftMonth(delta){ calDate.setMonth(calDate.getMonth()+delta); renderCalendar(); }
+function isoOf(d){ return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`; }
+function renderCalendar(){
+  const year=calDate.getFullYear(), month=calDate.getMonth();
+  document.getElementById('calMonthLabel').textContent = calDate.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  const grid=document.getElementById('calGrid'); grid.innerHTML='';
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>{ const el=document.createElement('div'); el.className='cal-dow'; el.textContent=d; grid.appendChild(el); });
+  const firstDay=new Date(year,month,1);
+  let startOffset=firstDay.getDay()-1; if(startOffset<0) startOffset=6;
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const todayIso=isoOf(new Date());
+  const byDate={};
+  state.items.filter(it=>it.status==='confirmed').forEach(it=>{ (byDate[it.expiryDate]=byDate[it.expiryDate]||[]).push(it); });
+  for(let i=0;i<startOffset;i++){ const c=document.createElement('div'); c.className='cal-cell'; c.style.visibility='hidden'; grid.appendChild(c); }
+  for(let day=1; day<=daysInMonth; day++){
+    const iso = `${year}-${(month+1).toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell' + (iso===todayIso?' today':'');
+    const dayItems = byDate[iso]||[];
+    let dots = dayItems.length ? '<div class="cal-dots">'+dayItems.slice(0,6).map(it=>`<span class="cal-dot ${urgencyClass(it.expiryDate)}"></span>`).join('')+'</div>' : '';
+    cell.innerHTML = `<div>${day}</div>${dots}`;
+    if(dayItems.length){
+      cell.onclick = ()=>{
+        document.querySelectorAll('.cal-cell').forEach(c=>c.classList.remove('selected'));
+        cell.classList.add('selected');
+        document.getElementById('calDayDetail').innerHTML = `<div class="section-title" style="font-size:20px;">${formatDatePretty(iso)}</div>` +
+          dayItems.map(it=>`<div class="item-card"><div class="iname">${escapeHtml(it.name)}</div><div class="imeta">${it.dateType}</div></div>`).join('');
+        speak(`${formatDatePretty(iso)}. ${dayItems.map(it=>it.name).join(', ')}.`);
+      };
+    }
+    grid.appendChild(cell);
+  }
+  document.getElementById('calDayDetail').innerHTML = '';
+}
+
+/* =========================================================
+   REVIEW NEEDED — ZIP EXPORT + SHARE
+========================================================= */
+function renderReview(){
+  const items = state.items.filter(it=>it.status==='needs_review');
+  document.getElementById('reviewBadge').textContent = items.length ? `(${items.length})` : '';
+  document.getElementById('btnSendPhotos').disabled = items.length===0;
+  const container = document.getElementById('reviewContainer');
+  if(items.length===0){ container.innerHTML = `<div class="subtle">Nothing needs review right now.</div>`; return; }
+  container.innerHTML = items.map(it=>`
+    <div class="item-card status-review">
+      <div class="iname">Item added ${new Date(it.addedAt).toLocaleDateString('en-GB')}</div>
+      <div class="thumb-row">${it.photos.map(p=>`<img src="${p}">`).join('')}</div>
+      ${it.notes?`<div class="hint">${escapeHtml(it.notes)}</div>`:''}
+      <div class="actions"><button onclick="deleteItem('${it.id}')">Delete</button></div>
+    </div>`).join('');
+}
+
+function dataUrlToBase64(dataUrl){
+  return dataUrl.split(',')[1];
+}
+
+async function exportReviewZip(){
+  const items = state.items.filter(it=>it.status==='needs_review');
+  if(items.length===0){ toast('Nothing to send'); speak('Nothing needs review right now.'); return; }
+
+  showSpinner('Preparing photos…');
+  const zip = new JSZip();
+  const idList = [];
+  items.forEach(it=>{
+    idList.push(it.id + (it.notes ? `  (note: ${it.notes})` : ''));
+    it.photos.forEach((p, idx)=>{
+      zip.file(`LL_${it.id}_${idx+1}.jpg`, dataUrlToBase64(p), {base64:true});
+    });
+  });
+
+  const instructions =
+`Larder Ledger — photos to read
+
+Please look at each set of photos below (grouped by the ID in the filename, e.g. all files starting "LL_abc123_" belong to the same item) and work out:
+1. The product name
+2. Whether it's a "Best Before" or "Use By" date
+3. The date itself
+
+Reply with ONLY a JSON array, no other text, in exactly this format:
+[
+  {"id": "abc123", "name": "Product Name", "dateType": "Best Before", "expiryDate": "2026-08-01"},
+  {"id": "def456", "name": "Another Product", "dateType": "Use By", "expiryDate": "2026-07-20"}
+]
+
+Use the ID exactly as it appears in the filenames (the part between "LL_" and the photo number).
+Dates must be in YYYY-MM-DD format.
+
+Item IDs in this batch, with any notes attached:
+${idList.map(l=>'- '+l).join('\n')}
+`;
+  zip.file('instructions.txt', instructions);
+
+  const blob = await zip.generateAsync({type:'blob'});
+  hideSpinner();
+
+  const fileName = `larder-ledger-photos-${new Date().toISOString().slice(0,10)}.zip`;
+  const file = new File([blob], fileName, {type:'application/zip'});
+
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({
+        files: [file],
+        title: 'Larder Ledger photos',
+        text: 'Food packaging photos to read — see instructions.txt inside.'
+      });
+      toast('Sent');
+      speak('Sent. Open the file on your computer, extract it, then follow the instructions inside to get Claude to read it.');
+      return;
+    }catch(err){
+      if(err.name === 'AbortError'){ return; }
+      console.error(err);
+    }
+  }
+
+  // Fallback: plain download
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Downloaded — attach this file to an email to yourself');
+  speak('Downloaded. Please attach this file to an email to yourself, then open it on your computer.');
+}
+
+function importReviewResults(event){
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const results = JSON.parse(e.target.result);
+      let matched = 0;
+      results.forEach(r=>{
+        const it = state.items.find(i=>i.id===r.id);
+        if(it && r.name && r.expiryDate){
+          it.name = r.name;
+          it.dateType = r.dateType || 'Best Before';
+          it.expiryDate = r.expiryDate;
+          it.status = 'confirmed';
+          it.photos = [];
+          const key = it.name.toLowerCase();
+          if(!state.history[key]) state.history[key] = {displayName:it.name, count:0, lastAdded:0};
+          state.history[key].count += 1;
+          state.history[key].lastAdded = Date.now();
+          state.history[key].displayName = it.name;
+          matched++;
+        }
+      });
+      purgeExpired();
+      saveState();
+      renderReview(); renderList(); renderCalendar();
+      toast(`${matched} item(s) updated`);
+      speak(`${matched} item${matched===1?'':'s'} updated from your computer.`);
+    }catch(err){
+      console.error(err);
+      alert('That file could not be read. Make sure it is the results.json file from the Desktop Helper.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+/* =========================================================
+   FREQUENT
+========================================================= */
+function renderFrequent(){
+  const rows = Object.values(state.history).sort((a,b)=>b.count-a.count);
+  const container = document.getElementById('freqContainer');
+  if(rows.length===0){ container.innerHTML = `<div class="subtle">Nothing tracked yet.</div>`; return; }
+  container.innerHTML = rows.map(h=>`<div class="item-card"><div class="iname">${escapeHtml(h.displayName)}</div><div class="imeta">Bought ${h.count} time${h.count>1?'s':''} — last ${new Date(h.lastAdded).toLocaleDateString('en-GB')}</div></div>`).join('');
+}
+
+/* =========================================================
+   BACKUP
+========================================================= */
+function exportBackup(){
+  const payload = { exportedAt:new Date().toISOString(), items: state.items, history: state.history };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`larder-ledger-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('Backup downloaded'); speak('Backup file downloaded.');
+}
+function importBackup(event){
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      let added = 0;
+      const existing = new Set(state.items.map(i=>i.id));
+      (data.items||[]).forEach(it=>{ if(!existing.has(it.id)){ state.items.push(it); added++; } });
+      Object.entries(data.history||{}).forEach(([k,h])=>{
+        if(!state.history[k]) state.history[k]=h;
+        else{
+          state.history[k].count = Math.max(state.history[k].count,h.count);
+          if(h.lastAdded > state.history[k].lastAdded){ state.history[k].lastAdded=h.lastAdded; state.history[k].displayName=h.displayName; }
+        }
+      });
+      purgeExpired(); saveState();
+      renderList(); renderCalendar(); renderFrequent(); renderReview();
+      toast(`${added} new item(s) merged`);
+      speak(`Import complete. ${added} new items merged in.`);
+    }catch(err){ alert('That file could not be read as a Larder Ledger backup.'); }
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+function clearAllData(){
+  if(!confirm("This deletes everything on this device. Continue?")) return;
+  state.items=[]; state.history={}; saveState();
+  renderList(); renderCalendar(); renderFrequent(); renderReview();
+  toast('All data cleared'); speak('All data cleared.');
+}
+
+/* =========================================================
+   REPORTS (PRINT / PDF)
+========================================================= */
+function mondayOnOrBefore(d){
+  const c = new Date(d); c.setHours(0,0,0,0);
+  let dow = c.getDay(); if(dow===0) dow=7; // Sun=7
+  c.setDate(c.getDate() - (dow-1));
+  return c;
+}
+function shortDow(d){ return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]; }
+function shortDate(d){ return d.getDate()+'-'+d.toLocaleDateString('en-GB',{month:'short'}); }
+
+function buildCalendarReportHTML(){
+  const items = state.items.filter(it=>it.status==='confirmed' && it.expiryDate);
+  const byDate = {};
+  items.forEach(it=>{ (byDate[it.expiryDate]=byDate[it.expiryDate]||[]).push(it); });
+
+  const start = mondayOnOrBefore(new Date());
+  const todayIso = isoOf(new Date());
+  const weeks = 4;
+  let rows = '';
+  for(let w=0; w<weeks; w++){
+    let cells = '';
+    for(let d=0; d<7; d++){
+      const day = new Date(start); day.setDate(day.getDate() + w*7 + d);
+      const iso = isoOf(day);
+      const dayItems = byDate[iso] || [];
+      const itemsHtml = dayItems.map(it=>`<span class="cal-item">${escapeHtml(it.name)}</span>`).join('');
+      cells += `<td class="${iso===todayIso?'today-cell':''}"><div class="cal-daynum">${shortDow(day)} ${shortDate(day)}</div>${itemsHtml}</td>`;
+    }
+    rows += `<tr>${cells}</tr>`;
+  }
+
+  return `
+    <h1>🥫 Larder Ledger — Calendar Report</h1>
+    <div class="print-sub">4 weeks from ${shortDate(start)} · Printed ${new Date().toLocaleDateString('en-GB')}</div>
+    <table><tbody>${rows}</tbody></table>`;
+}
+
+function buildBigListHTML(){
+  const items = state.items.filter(it=>it.status==='confirmed' && it.expiryDate)
+    .slice().sort((a,b)=>a.expiryDate.localeCompare(b.expiryDate));
+  if(items.length===0){
+    return `<h1>🥫 Larder Ledger — Big-Print List</h1><div class="print-sub">Printed ${new Date().toLocaleDateString('en-GB')}</div><div style="font-size:28px;">Nothing on your list yet.</div>`;
+  }
+  const byDate = {};
+  const order = [];
+  items.forEach(it=>{
+    if(!byDate[it.expiryDate]){ byDate[it.expiryDate]=[]; order.push(it.expiryDate); }
+    byDate[it.expiryDate].push(it.name);
+  });
+  const rows = order.map(iso=>{
+    const d = new Date(iso+'T00:00:00');
+    const label = `${shortDow(d)} ${shortDate(d)}`;
+    return `<div class="big-row"><span class="big-date">${label}</span><div class="big-items">${escapeHtml(byDate[iso].join(', '))}</div></div>`;
+  }).join('');
+  return `<h1>🥫 Larder Ledger — Big-Print List</h1><div class="print-sub">Printed ${new Date().toLocaleDateString('en-GB')}</div>${rows}`;
+}
+
+function printReport(type){
+  const html = type==='calendar' ? buildCalendarReportHTML() : buildBigListHTML();
+  document.getElementById('printArea').innerHTML = html;
+  document.body.classList.add('printing');
+  speak('Opening the print screen. Use Share to save this as a P D F, or choose a printer.');
+  setTimeout(()=>{ window.print(); }, 150);
+}
+window.addEventListener('afterprint', ()=>{
+  document.body.classList.remove('printing');
+  document.getElementById('printArea').innerHTML = '';
+});
+
+/* =========================================================
+   SPINNER
+========================================================= */
+function showSpinner(msg){
+  let el = document.getElementById('spinnerOverlay');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'spinnerOverlay';
+    el.className = 'spinner-overlay';
+    el.innerHTML = `<div class="spinner"></div><div id="spinnerMsg"></div>`;
+    document.body.appendChild(el);
+  }
+  document.getElementById('spinnerMsg').textContent = msg;
+  el.style.display = 'flex';
+}
+function hideSpinner(){ const el=document.getElementById('spinnerOverlay'); if(el) el.style.display='none'; }
+
+/* =========================================================
+   INIT
+========================================================= */
+loadAll();
+saveState();
+refreshHome();
+</script>
+
+
+</body></html>
