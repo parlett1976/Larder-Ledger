@@ -1,30 +1,18 @@
 <!DOCTYPE html>
-<!-- saved from url=(0055)file:///C:/Users/jonat/Downloads/food_tracker_v4_3.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Larder Ledger</title>
 <style>
   :root{
-    --bg: #FFFFFF;
-    --ink: #0E1A14;
-    --panel: #F4F6F2;
-    --primary: #0B3D2E;
-    --primary-dark: #06251B;
-    --accent: #B5541A;
-    --ok: #1B6B3C;
-    --ok-bg: #E4F3E8;
-    --warn: #9C5B00;
-    --warn-bg: #FFF1D6;
-    --danger: #A3241B;
-    --danger-bg: #FCE4E1;
-    --yellow: #FFD53D;
-    --border: #0E1A14;
-    --radius: 14px;
+    --bg: #FFFFFF; --ink: #0E1A14; --panel: #F4F6F2;
+    --primary: #0B3D2E; --primary-dark: #06251B; --accent: #B5541A;
+    --ok: #1B6B3C; --ok-bg: #E4F3E8; --warn: #9C5B00; --warn-bg: #FFF1D6;
+    --danger: #A3241B; --danger-bg: #FCE4E1; --yellow: #FFD53D;
+    --border: #0E1A14; --radius: 14px;
     --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --fs-base: 19px;
-    --fs-lg: 24px;
-    --fs-xl: 30px;
+    --fs-base: 19px; --fs-lg: 24px; --fs-xl: 30px;
   }
   body.xl-text{ --fs-base: 23px; --fs-lg: 29px; --fs-xl: 36px; }
   *{box-sizing:border-box;}
@@ -52,15 +40,22 @@
   .bigbtn.small{min-height:60px;font-size:var(--fs-base);padding:14px 16px;}
   .link-btn{background:none;border:none;color:var(--primary);font-size:16px;font-weight:700;text-decoration:underline;padding:10px 0;}
 
+  .yesno-row{display:flex;gap:12px;margin:18px 0;}
+  .yesno-row button{flex:1;font-size:var(--fs-xl);font-weight:900;padding:26px 10px;border-radius:var(--radius);min-height:96px;border:3px solid var(--border);}
+  .btn-yes{background:var(--ok-bg);color:var(--ok);border-color:var(--ok);}
+  .btn-no{background:var(--danger-bg);color:var(--danger);border-color:var(--danger);}
+
   .speak-block{background:var(--panel);border:2px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;font-size:var(--fs-lg);font-weight:700;}
+  .speak-block .label{font-size:var(--fs-base);font-weight:600;color:#33403a;margin-bottom:4px;}
   .repeat-fab{position:fixed;right:16px;bottom:16px;z-index:80;background:var(--primary);color:#fff;border:3px solid var(--primary-dark);border-radius:50%;width:72px;height:72px;font-size:30px;box-shadow:0 3px 10px rgba(0,0,0,0.3);}
 
   .section-title{font-size:var(--fs-xl);font-weight:800;margin-bottom:14px;}
   .subtle{color:#4b5952;font-size:var(--fs-base);margin-bottom:16px;}
+  .warn-banner{background:var(--warn-bg);border:2px solid var(--warn);border-radius:12px;padding:12px 14px;font-size:15px;font-weight:600;color:#5c3800;margin-bottom:16px;}
 
   .field-block{margin-bottom:18px;}
   .field-block label{display:block;font-weight:700;font-size:var(--fs-base);margin-bottom:6px;}
-  .field-block textarea{width:100%;padding:14px;border-radius:12px;border:3px solid var(--border);font-size:var(--fs-lg);}
+  .field-block textarea, .field-block input[type=text], .field-block input[type=password]{width:100%;padding:14px;border-radius:12px;border:3px solid var(--border);font-size:var(--fs-lg);}
   .hint{font-size:15px;color:#4b5952;margin-top:6px;}
 
   .item-card{background:#fff;border:3px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
@@ -106,26 +101,6 @@
   .photo-thumb{max-width:100%;max-height:220px;border-radius:10px;border:2px solid var(--border);margin:10px 0;display:block;}
   .thumb-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;}
   .thumb-row img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:2px solid var(--border);}
-
-  /* PRINT / PDF REPORTS */
-  #printArea{ display:none; }
-  body.printing > *:not(#printArea){ display:none !important; }
-  body.printing #printArea{ display:block; background:#fff; color:#000; padding:16px; }
-  #printArea h1{ font-size:22px; margin-bottom:4px; }
-  #printArea .print-sub{ font-size:13px; color:#333; margin-bottom:16px; }
-  #printArea table{ width:100%; border-collapse:collapse; table-layout:fixed; }
-  #printArea th, #printArea td{ border:1.5px solid #000; padding:6px; vertical-align:top; word-wrap:break-word; }
-  #printArea th{ background:#eee; font-size:13px; text-align:left; }
-  #printArea td.today-cell{ background:#F4F6F2; }
-  #printArea .cal-daynum{ font-weight:800; font-size:14px; margin-bottom:4px; }
-  #printArea .cal-item{ display:block; background:var(--yellow); font-weight:700; font-size:12.5px; padding:2px 5px; border-radius:4px; margin-bottom:3px; }
-  #printArea .big-row{ margin-bottom:26px; page-break-inside:avoid; }
-  #printArea .big-date{ background:var(--yellow); font-weight:800; font-size:40px; padding:4px 12px; display:inline-block; }
-  #printArea .big-items{ font-size:40px; font-weight:600; margin-top:8px; }
-  @media print{
-    @page{ margin:12mm; }
-    body.printing #printArea{ padding:0; }
-  }
 </style>
 </head>
 <body>
@@ -133,35 +108,62 @@
 <header class="appbar">
   <button class="icon-btn" id="homeBtn" onclick="goHome()" aria-label="Home">🏠 Home</button>
   <div class="title">🥫 Larder Ledger</div>
-  <button class="icon-btn" id="menuBtn" onclick="showScreen(&#39;menu&#39;)" aria-label="Menu">☰ Menu</button>
+  <button class="icon-btn" id="menuBtn" onclick="showScreen('menu')" aria-label="Menu">☰ Menu</button>
 </header>
 
 <!-- HOME -->
 <section class="screen active" id="screen-home">
   <div class="section-title">Add items</div>
+  <div id="noKeyWarning"></div>
   <div class="subtle" id="sessionSummary">No items added yet this shop.</div>
   <div id="pendingItemStatus"></div>
 
-  <button class="bigbtn primary" onclick="takePhoto(&#39;camera&#39;)"><span class="emoji">📷</span> Take Photo</button>
-  <button class="bigbtn small" id="btnAddNotes" onclick="showScreen(&#39;notes&#39;)" disabled=""><span class="emoji">📝</span> Add Notes to This Item</button>
-  <button class="bigbtn small" onclick="takePhoto(&#39;library&#39;)"><span class="emoji">🖼️</span> Upload Recent Photo</button>
+  <button class="bigbtn primary" onclick="takePhoto('camera')"><span class="emoji">📷</span> Take Photo</button>
+  <button class="bigbtn small" id="btnAddNotes" onclick="showScreen('notes')" disabled><span class="emoji">📝</span> Add Notes to This Item</button>
+  <button class="bigbtn small" onclick="takePhoto('library')"><span class="emoji">🖼️</span> Upload Recent Photo</button>
+  <button class="bigbtn small" onclick="startQuickCapture()"><span class="emoji">📸</span> Quick Capture (Whole Shop)</button>
 
   <div style="margin-top:22px;">
-    <button class="bigbtn accent" onclick="finishShop()"><span class="emoji">🏁</span> Finish Shop &amp; Prepare for Computer</button>
+    <button class="bigbtn accent" onclick="finishShop()"><span class="emoji">🏁</span> Finish Shop</button>
   </div>
 
   <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none;">
   <input type="file" accept="image/*" id="libraryInput" style="display:none;">
 </section>
 
-<!-- PHOTO OPTIONS (shown right after any photo is taken) -->
+<!-- PHOTO OPTIONS -->
 <section class="screen" id="screen-photo-options">
   <div class="section-title">Photo added</div>
   <img id="lastPhotoThumb" class="photo-thumb">
   <div class="thumb-row" id="allPhotosRow"></div>
   <button class="bigbtn small" onclick="retakeCurrentPhoto()"><span class="emoji">🔄</span> Retake Photo</button>
   <button class="bigbtn small" onclick="takeAnotherPhoto()"><span class="emoji">➕</span> Take Another Photo of This Item</button>
-  <button class="bigbtn ok" onclick="finishItemAndReturn()"><span class="emoji">✅</span> Done — Save Item &amp; Return to Main Screen</button>
+  <button class="bigbtn ok" onclick="finishItemAndReturn()"><span class="emoji">✅</span> Done</button>
+</section>
+
+<!-- QUICK CAPTURE (whole shop, photo-only, process later) -->
+<section class="screen" id="screen-quickcapture">
+  <div class="section-title">Quick Capture</div>
+  <div class="subtle" id="qcSummary">Photograph your whole shop first — nothing is sent to the AI yet. Process it afterwards from Needs Review, ideally on Wi-Fi.</div>
+  <img id="qcLastPhotoThumb" class="photo-thumb" style="display:none;">
+  <div class="thumb-row" id="qcAllPhotosRow"></div>
+  <button class="bigbtn primary" onclick="qcTakePhoto()"><span class="emoji">📷</span> Take Photo</button>
+  <button class="bigbtn small" id="qcBtnNextItem" onclick="qcNextItem()" disabled><span class="emoji">➡️</span> Next Item (this one's done)</button>
+  <button class="bigbtn ok" id="qcBtnFinish" onclick="qcFinishBatch()"><span class="emoji">🏁</span> Finish Quick Capture</button>
+  <button class="link-btn" onclick="goHome()">Cancel and go Home (items already captured stay saved)</button>
+  <input type="file" accept="image/*" capture="environment" id="qcCameraInput" style="display:none;">
+</section>
+
+<!-- GEMINI LOW-CONFIDENCE CONFIRM -->
+<section class="screen" id="screen-confirm">
+  <div class="section-title">Is this right?</div>
+  <div class="speak-block"><div class="label">Product name</div><div id="confirmNameText">—</div></div>
+  <div class="speak-block"><div class="label">Date found</div><div id="confirmDateText">—</div></div>
+  <div class="yesno-row">
+    <button class="btn-yes" onclick="confirmDetection(true)">✅ YES</button>
+    <button class="btn-no" onclick="confirmDetection(false)">❌ NO</button>
+  </div>
+  <button class="bigbtn small" onclick="markCurrentForReview()"><span class="emoji">📤</span> I'll sort this on my computer later</button>
 </section>
 
 <!-- NOTES -->
@@ -169,29 +171,28 @@
   <div class="section-title">Add a note</div>
   <div class="field-block">
     <label for="notesInput">Note for this item</label>
-    <textarea id="notesInput" rows="4" placeholder="Tap here, then use your keyboard&#39;s microphone button to dictate"></textarea>
-    <div class="hint">Tip: tap the text box, then tap the microphone icon on your iPhone's own keyboard to speak instead of typing.</div>
+    <textarea id="notesInput" rows="4" placeholder="Tap here, then use your keyboard's microphone button to dictate"></textarea>
+    <div class="hint">Tip: tap the text box, then tap the microphone icon on your iPhone's own keyboard to speak instead of typing. Notes also help the AI if the packaging is hard to read.</div>
   </div>
-  <button class="bigbtn small" onclick="speak(document.getElementById(&#39;notesInput&#39;).value || &#39;No note has been entered yet&#39;)"><span class="emoji">🔊</span> Read note back to me</button>
+  <button class="bigbtn small" onclick="speak(document.getElementById('notesInput').value || 'No note has been entered yet')"><span class="emoji">🔊</span> Read note back to me</button>
   <button class="bigbtn ok" onclick="saveNoteAndReturn()"><span class="emoji">✅</span> Save Note</button>
 </section>
 
 <!-- MENU -->
 <section class="screen" id="screen-menu">
   <div class="section-title">Menu</div>
-  <button class="bigbtn" onclick="showScreen(&#39;list&#39;)"><span class="emoji">📋</span> My List</button>
-  <button class="bigbtn" onclick="showScreen(&#39;calendar&#39;)"><span class="emoji">📅</span> Calendar</button>
-  <button class="bigbtn" onclick="showScreen(&#39;reports&#39;)"><span class="emoji">🖨️</span> Print / PDF Reports</button>
-  <button class="bigbtn" onclick="showScreen(&#39;review&#39;)"><span class="emoji">📤</span> Needs Review <span id="reviewBadge"></span></button>
-  <button class="bigbtn" onclick="showScreen(&#39;frequent&#39;)"><span class="emoji">⭐</span> Frequently Bought</button>
-  <button class="bigbtn" onclick="showScreen(&#39;backup&#39;)"><span class="emoji">💾</span> Backup &amp; Sync</button>
-  <button class="bigbtn" onclick="showScreen(&#39;settings&#39;)"><span class="emoji">⚙️</span> Settings</button>
+  <button class="bigbtn" onclick="showScreen('list')"><span class="emoji">📋</span> My List</button>
+  <button class="bigbtn" onclick="showScreen('calendar')"><span class="emoji">📅</span> Calendar</button>
+  <button class="bigbtn" onclick="showScreen('reports')"><span class="emoji">🧾</span> Reports &amp; Export</button>
+  <button class="bigbtn" onclick="showScreen('review')"><span class="emoji">📤</span> Needs Review <span id="reviewBadge"></span></button>
+  <button class="bigbtn" onclick="showScreen('frequent')"><span class="emoji">⭐</span> Frequently Bought</button>
+  <button class="bigbtn" onclick="showScreen('backup')"><span class="emoji">💾</span> Backup &amp; Sync</button>
+  <button class="bigbtn" onclick="showScreen('settings')"><span class="emoji">⚙️</span> Settings</button>
 </section>
 
 <!-- LIST -->
 <section class="screen" id="screen-list">
   <div class="section-title">My List</div>
-  <div class="subtle">Items appear here once they've been read on your computer and imported back in.</div>
   <button class="bigbtn small" onclick="readOutList()"><span class="emoji">🔊</span> Read my list aloud</button>
   <input type="text" class="search-input" id="listSearch" placeholder="Search items…" oninput="renderList()">
   <div id="listContainer"></div>
@@ -209,21 +210,27 @@
   <div id="calDayDetail" style="margin-top:16px;"></div>
 </section>
 
-<!-- REPORTS -->
+<!-- REPORTS & EXPORT -->
 <section class="screen" id="screen-reports">
-  <div class="section-title">Print / PDF Reports</div>
-  <div class="subtle">Makes a printable page from your list. On the "Save as PDF" or "Print" screen that opens, use the Share button to save it to Files, or send it to a printer.</div>
-  <button class="bigbtn primary" onclick="printReport(&#39;calendar&#39;)"><span class="emoji">📅</span> Calendar Report</button>
-  <button class="bigbtn primary" onclick="printReport(&#39;biglist&#39;)"><span class="emoji">🔠</span> Big-Print List</button>
+  <div class="section-title">Reports &amp; Export</div>
+  <div class="subtle">Items added in your latest round of photos are highlighted yellow until your next round.</div>
+  <button class="bigbtn primary" onclick="generateCalendarReportPDF()"><span class="emoji">📅</span> Calendar Report (PDF, 4 weeks)</button>
+  <button class="bigbtn primary" onclick="generateListReportPDF()"><span class="emoji">📋</span> List Report (PDF, 2 weeks)</button>
+  <div style="margin-top:20px;font-weight:700;font-size:var(--fs-base);">Export data</div>
+  <button class="bigbtn small" onclick="exportDataJSON()"><span class="emoji">🗂️</span> Export as JSON</button>
+  <button class="bigbtn small" onclick="exportDataExcel()"><span class="emoji">📊</span> Export as Excel</button>
+  <button class="bigbtn small" onclick="exportDataWord()"><span class="emoji">📄</span> Export as Word</button>
 </section>
 
 <!-- REVIEW NEEDED -->
 <section class="screen" id="screen-review">
   <div class="section-title">Needs Review</div>
-  <div class="subtle">These items haven't been read yet. Send the photos to your computer, get Claude to read them, then bring the results back here.</div>
+  <div class="subtle">Items here are waiting to be read — either freshly captured and not yet processed, or a previous read failed. Process them here on your phone (best on Wi-Fi), or send the photos to your computer as a backup.</div>
+  <button class="bigbtn primary" id="btnProcessAll" onclick="processAllReviewItems()"><span class="emoji">▶️</span> Process All Now (Uses Gemini)</button>
   <button class="bigbtn accent" id="btnSendPhotos" onclick="exportReviewZip()"><span class="emoji">📤</span> Send Photos to My Computer</button>
-  <button class="bigbtn small" onclick="document.getElementById(&#39;importResultsInput&#39;).click()"><span class="emoji">📥</span> Import Results from Computer</button>
+  <button class="bigbtn small" onclick="document.getElementById('importResultsInput').click()"><span class="emoji">📥</span> Import Results from Computer</button>
   <input type="file" accept="application/json" id="importResultsInput" style="display:none;" onchange="importReviewResults(event)">
+  <button class="bigbtn danger" id="btnClearReviewPhotos" onclick="clearReviewPhotos()"><span class="emoji">🧹</span> Free Up Space (Remove Photos from Stuck Items)</button>
   <div id="reviewContainer" style="margin-top:16px;"></div>
 </section>
 
@@ -239,7 +246,7 @@
   <div class="section-title">Backup &amp; Sync</div>
   <div class="subtle">Export a backup file here, then import it on your other device to bring your data across. Nothing is deleted when importing.</div>
   <button class="bigbtn ok" onclick="exportBackup()"><span class="emoji">💾</span> Export Backup File</button>
-  <button class="bigbtn small" onclick="document.getElementById(&#39;importInput&#39;).click()"><span class="emoji">📥</span> Import Backup File</button>
+  <button class="bigbtn small" onclick="document.getElementById('importInput').click()"><span class="emoji">📥</span> Import Backup File</button>
   <input type="file" accept="application/json" id="importInput" style="display:none;" onchange="importBackup(event)">
   <button class="bigbtn danger" onclick="clearAllData()"><span class="emoji">⚠️</span> Clear All Data</button>
 </section>
@@ -247,6 +254,16 @@
 <!-- SETTINGS -->
 <section class="screen" id="screen-settings">
   <div class="section-title">Settings</div>
+  <div class="field-block">
+    <label for="geminiKeyInput">Gemini API key</label>
+    <input type="password" id="geminiKeyInput" placeholder="Paste your key here" onchange="saveSettings()">
+    <div class="hint">Get a free key from Google AI Studio (aistudio.google.com). Stored only on this phone — used to talk directly to Google when reading your photos.</div>
+  </div>
+  <div class="field-block">
+    <label for="geminiModelInput">Gemini model name</label>
+    <input type="text" id="geminiModelInput" placeholder="gemini-3.6-flash" onchange="saveSettings()">
+    <div class="hint">Leave as default unless it stops working — Google occasionally renames models. Check aistudio.google.com if you need to update this.</div>
+  </div>
   <div class="toggle-row">
     <div class="tlabel">🔊 Speak prompts aloud</div>
     <label class="switch"><input type="checkbox" id="toggleSpeech" onchange="saveSettings()"><span class="slider"></span></label>
@@ -255,45 +272,156 @@
     <div class="tlabel">🔤 Extra large text</div>
     <label class="switch"><input type="checkbox" id="toggleXL" onchange="saveSettings()"><span class="slider"></span></label>
   </div>
+  <div style="margin-top:20px;">
+    <button class="bigbtn small" onclick="testGeminiKey()"><span class="emoji">🧪</span> Test Gemini Key</button>
+    <div id="testKeyResult" class="hint" style="font-size:15px;"></div>
+  </div>
 </section>
 
 <button class="repeat-fab" onclick="repeatLastSpeech()" aria-label="Repeat last message">🔊</button>
 <div class="toast" id="toast"></div>
-<div id="printArea"></div>
 
-<script src="./Larder Ledger_files/jszip.min.js.download"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 /* =========================================================
    STATE & STORAGE
 ========================================================= */
-const K_ITEMS = 'larderLedger3.items';
-const K_HISTORY = 'larderLedger3.history';
-const K_SETTINGS = 'larderLedger3.settings';
+const K_ITEMS = 'larderLedger4.items';
+const K_HISTORY = 'larderLedger4.history';
+const K_SETTINGS = 'larderLedger4.settings';
+const K_BATCH = 'larderLedger4.batch';
 
-let state = { items: [], history: {} };
-let settings = { speech: true, xl: false };
+let state = { items: [], history: {}, latestBatchId: 0, batchOpen: false };
+let settings = { speech: true, xl: false, geminiKey: '', geminiModel: 'gemini-3.6-flash' };
 
 function loadAll(){
   try{ state.items = JSON.parse(localStorage.getItem(K_ITEMS)) || []; }catch(e){ state.items = []; }
   try{ state.history = JSON.parse(localStorage.getItem(K_HISTORY)) || {}; }catch(e){ state.history = {}; }
+  try{
+    const b = JSON.parse(localStorage.getItem(K_BATCH));
+    if(b){ state.latestBatchId = b.latestBatchId||0; state.batchOpen = !!b.batchOpen; }
+  }catch(e){}
   try{ settings = Object.assign(settings, JSON.parse(localStorage.getItem(K_SETTINGS)) || {}); }catch(e){}
   purgeExpired();
   applySettingsToUI();
 }
 function saveState(){
-  localStorage.setItem(K_ITEMS, JSON.stringify(state.items));
-  localStorage.setItem(K_HISTORY, JSON.stringify(state.history));
+  // Photos now live in IndexedDB (see PHOTO STORAGE below), not in these localStorage blobs,
+  // so state.items/history/batch are small (item metadata + tiny thumbnails-worth of text) even
+  // with a large shop's worth of items queued up. This should make the old "storage full" freeze
+  // essentially a non-issue, but the try/catch stays as a safety net just in case.
+  try{
+    localStorage.setItem(K_ITEMS, JSON.stringify(state.items));
+    localStorage.setItem(K_HISTORY, JSON.stringify(state.history));
+    localStorage.setItem(K_BATCH, JSON.stringify({latestBatchId: state.latestBatchId, batchOpen: state.batchOpen}));
+    return true;
+  }catch(err){
+    console.error('saveState failed', err);
+    alert('Your phone could not save changes just now (storage error). Nothing before this action was lost. Try again in a moment, or free up space via Menu → Needs Review.');
+    speak('Could not save just now. Please try again.');
+    return false;
+  }
+}
+
+/* =========================================================
+   PHOTO STORAGE (IndexedDB — much larger quota than localStorage,
+   so a whole shop's worth of photos queued up for review doesn't
+   risk filling up storage the way stuffing base64 photos directly
+   into localStorage used to.)
+========================================================= */
+const PHOTO_DB_NAME = 'larderLedgerPhotos';
+const PHOTO_STORE = 'photos';
+let photoDbPromise = null;
+function openPhotoDB(){
+  if(!window.indexedDB) return Promise.reject(new Error('IndexedDB not available on this device'));
+  if(photoDbPromise) return photoDbPromise;
+  photoDbPromise = new Promise((resolve, reject)=>{
+    const req = indexedDB.open(PHOTO_DB_NAME, 1);
+    req.onupgradeneeded = ()=>{ req.result.createObjectStore(PHOTO_STORE); };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+  return photoDbPromise;
+}
+function idbSetPhoto(id, dataUrl){
+  return openPhotoDB().then(db=>new Promise((resolve, reject)=>{
+    const tx = db.transaction(PHOTO_STORE, 'readwrite');
+    tx.objectStore(PHOTO_STORE).put(dataUrl, id);
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = ()=>reject(tx.error);
+  }));
+}
+function idbGetPhoto(id){
+  return openPhotoDB().then(db=>new Promise((resolve, reject)=>{
+    const tx = db.transaction(PHOTO_STORE, 'readonly');
+    const req = tx.objectStore(PHOTO_STORE).get(id);
+    req.onsuccess = ()=>resolve(req.result || null);
+    req.onerror = ()=>reject(req.error);
+  }));
+}
+async function idbGetPhotos(ids){
+  const out = [];
+  for(const id of (ids||[])){
+    try{ out.push(await idbGetPhoto(id)); }
+    catch(e){ console.error('Could not load a stored photo', e); out.push(null); }
+  }
+  return out;
+}
+function idbDeletePhotos(ids){
+  if(!ids || ids.length===0) return Promise.resolve();
+  return openPhotoDB().then(db=>new Promise((resolve, reject)=>{
+    const tx = db.transaction(PHOTO_STORE, 'readwrite');
+    const store = tx.objectStore(PHOTO_STORE);
+    ids.forEach(id=>store.delete(id));
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = ()=>reject(tx.error);
+  }));
+}
+async function idbStorePhotoSet(photos){
+  // Stores each photo under a fresh id; if storage fails partway through (very unlikely with
+  // IndexedDB's much larger quota), it degrades gracefully rather than losing the whole item.
+  const ids = [];
+  for(const p of (photos||[])){
+    const id = uid();
+    try{ await idbSetPhoto(id, p); ids.push(id); }
+    catch(e){ console.error('Could not store a photo', e); }
+  }
+  return ids;
+}
+async function migrateLegacyPhotos(){
+  // Older versions of this app stored photos as base64 directly on the item (in localStorage).
+  // Move any leftovers into IndexedDB so everything goes through one system going forward.
+  let changed = false;
+  for(const it of state.items){
+    if(it.photos && it.photos.length>0){
+      try{
+        const ids = await idbStorePhotoSet(it.photos);
+        it.photoIds = (it.photoIds||[]).concat(ids);
+        changed = true;
+      }catch(e){ console.error('Legacy photo migration failed for item', it.id, e); }
+      delete it.photos;
+    }
+  }
+  if(changed){ saveState(); renderReview(); }
 }
 function saveSettings(){
   settings.speech = document.getElementById('toggleSpeech').checked;
   settings.xl = document.getElementById('toggleXL').checked;
+  settings.geminiKey = document.getElementById('geminiKeyInput').value.trim();
+  settings.geminiModel = document.getElementById('geminiModelInput').value.trim() || 'gemini-2.5-flash';
   localStorage.setItem(K_SETTINGS, JSON.stringify(settings));
   applySettingsToUI();
 }
 function applySettingsToUI(){
   document.getElementById('toggleSpeech').checked = settings.speech;
   document.getElementById('toggleXL').checked = settings.xl;
+  document.getElementById('geminiKeyInput').value = settings.geminiKey;
+  document.getElementById('geminiModelInput').value = settings.geminiModel;
   document.body.classList.toggle('xl-text', settings.xl);
+  const warn = document.getElementById('noKeyWarning');
+  warn.innerHTML = settings.geminiKey ? '' : `<div class="warn-banner">⚠️ No Gemini key set — photos will be queued for your computer instead. Add a key in Settings to read them automatically on your phone.</div>`;
 }
 function purgeExpired(){
   const today = startOfToday();
@@ -311,6 +439,15 @@ function formatDaysLabel(iso){ const n=daysUntil(iso); if(n<0) return 'expired';
 function formatDatePretty(iso){ const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
 function escapeHtml(str){ const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function isItemHighlighted(it){ return it.batchId === state.latestBatchId && !it.dismissed; }
+function dateStamp(){ return new Date().toISOString().slice(0,10); }
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('Downloaded '+filename);
+}
 
 /* =========================================================
    SPEECH
@@ -338,10 +475,10 @@ function showScreen(name){
   document.getElementById('screen-'+name).classList.add('active');
   if(name==='list'){ renderList(); speak('Your list, sorted by soonest date first.'); }
   if(name==='calendar'){ renderCalendar(); speak('Calendar view.'); }
-  if(name==='reports'){ speak('Print or P D F reports. Choose calendar report or big print list.'); }
   if(name==='review'){ renderReview(); }
   if(name==='frequent'){ renderFrequent(); }
   if(name==='menu'){ speak('Menu.'); }
+  if(name==='reports'){ speak('Reports and export.'); }
 }
 function goHome(){ showScreen('home'); refreshHome(); }
 
@@ -351,9 +488,7 @@ function goHome(){ showScreen('home'); refreshHome(); }
 let currentItem = null;
 let sessionAdded = [];
 
-function startNewItem(){
-  currentItem = { id: uid(), notes:'', photos:[] };
-}
+function startNewItem(){ currentItem = { id: uid(), notes:'', photos:[] }; }
 startNewItem();
 
 function refreshHome(){
@@ -366,19 +501,17 @@ function refreshHome(){
   } else {
     statusEl.innerHTML = '';
   }
+  applySettingsToUI();
 }
-function discardCurrentItem(){
-  startNewItem();
-  refreshHome();
-  toast('Discarded');
-}
+function discardCurrentItem(){ startNewItem(); refreshHome(); toast('Discarded'); }
 
 function takePhoto(target){
   if(target === 'library') document.getElementById('libraryInput').click();
   else document.getElementById('cameraInput').click();
 }
-document.getElementById('cameraInput').addEventListener('change', e=>handlePhotoFile(e.target.files[0]));
-document.getElementById('libraryInput').addEventListener('change', e=>handlePhotoFile(e.target.files[0]));
+document.getElementById('cameraInput').addEventListener('change', e=>{ handlePhotoFile(e.target.files[0]); e.target.value=''; });
+document.getElementById('libraryInput').addEventListener('change', e=>{ handlePhotoFile(e.target.files[0]); e.target.value=''; });
+document.getElementById('qcCameraInput').addEventListener('change', e=>{ qcHandlePhotoFile(e.target.files[0]); e.target.value=''; });
 
 function handlePhotoFile(file){
   if(!file) return;
@@ -394,7 +527,6 @@ function handlePhotoFile(file){
   };
   reader.readAsDataURL(file);
 }
-
 function downscale(dataUrl, maxWidth){
   return new Promise(resolve=>{
     const img = new Image();
@@ -409,7 +541,6 @@ function downscale(dataUrl, maxWidth){
     img.src = dataUrl;
   });
 }
-
 function showPhotoOptions(){
   const last = currentItem.photos[currentItem.photos.length-1];
   document.getElementById('lastPhotoThumb').src = last;
@@ -417,37 +548,332 @@ function showPhotoOptions(){
   row.innerHTML = currentItem.photos.map(p=>`<img src="${p}">`).join('');
   showScreen('photo-options');
   const count = currentItem.photos.length;
-  speak(count>1 ? `Photo ${count} added. You can retake it, take another photo of this item, or finish and save.` : 'Photo added. You can retake it, take another photo of this item, or finish and save.');
+  speak(count>1 ? `Photo ${count} added. You can retake it, take another photo of this item, or tap Done.` : 'Photo added. You can retake it, take another photo of this item, or tap Done.');
+}
+function retakeCurrentPhoto(){ currentItem.photos.pop(); takePhoto('camera'); }
+function takeAnotherPhoto(){ takePhoto('camera'); }
+
+function dataUrlToBase64(dataUrl){ return dataUrl.split(',')[1]; }
+
+/* =========================================================
+   QUICK CAPTURE (whole shop, photo-only — nothing sent to the AI
+   until you tap Process All from Needs Review)
+========================================================= */
+let qcCurrentPhotos = [];
+let qcItemCount = 0;
+
+function startQuickCapture(){
+  qcCurrentPhotos = [];
+  qcItemCount = 0;
+  renderQuickCaptureUI();
+  showScreen('quickcapture');
+  speak('Quick capture started. Take a photo of the first item.');
 }
 
-function retakeCurrentPhoto(){
-  currentItem.photos.pop();
-  takePhoto('camera');
+function qcTakePhoto(){ document.getElementById('qcCameraInput').click(); }
+
+function qcHandlePhotoFile(file){
+  if(!file) return;
+  showSpinner('Adding photo…');
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    downscale(e.target.result, 1400).then(dataUrl=>{
+      qcCurrentPhotos.push(dataUrl);
+      hideSpinner();
+      renderQuickCaptureUI();
+      speak(qcCurrentPhotos.length>1 ? `Photo ${qcCurrentPhotos.length} added for this item. Take another photo of it, or tap Next Item.` : 'Photo added. Take another photo of this item if it needs one, or tap Next Item.');
+    });
+  };
+  reader.readAsDataURL(file);
 }
-function takeAnotherPhoto(){
-  takePhoto('camera');
+
+function renderQuickCaptureUI(){
+  document.getElementById('qcSummary').textContent = `${qcItemCount} item${qcItemCount===1?'':'s'} captured so far. ${qcCurrentPhotos.length} photo${qcCurrentPhotos.length===1?'':'s'} taken for the current item.`;
+  const thumb = document.getElementById('qcLastPhotoThumb');
+  if(qcCurrentPhotos.length>0){
+    thumb.src = qcCurrentPhotos[qcCurrentPhotos.length-1];
+    thumb.style.display = 'block';
+  } else {
+    thumb.style.display = 'none';
+  }
+  document.getElementById('qcAllPhotosRow').innerHTML = qcCurrentPhotos.map(p=>`<img src="${p}">`).join('');
+  document.getElementById('qcBtnNextItem').disabled = qcCurrentPhotos.length===0;
 }
-function finishItemAndReturn(){
+
+async function qcSaveCurrentItem(){
+  if(qcCurrentPhotos.length===0) return false;
+  ensureOpenBatch();
+  const itemId = uid();
+  await saveAsNeedsReview(itemId, qcCurrentPhotos, ''); // no errorMsg — this is "captured, awaiting processing", not a failure
+  qcItemCount++;
+  qcCurrentPhotos = [];
+  return true;
+}
+
+async function qcNextItem(){
+  if(qcCurrentPhotos.length===0){ toast('Take at least one photo first'); return; }
+  showSpinner('Saving item…');
+  await qcSaveCurrentItem();
+  hideSpinner();
+  renderQuickCaptureUI();
+  speak(`Item ${qcItemCount} captured. Take a photo of the next item, or tap Finish Quick Capture.`);
+}
+
+async function qcFinishBatch(){
+  if(qcCurrentPhotos.length>0){
+    showSpinner('Saving last item…');
+    await qcSaveCurrentItem();
+    hideSpinner();
+  }
+  state.batchOpen = false;
+  saveState();
+  const count = qcItemCount;
+  qcItemCount = 0; qcCurrentPhotos = [];
+  showScreen('review');
+  toast(`${count} item(s) captured`);
+  speak(`Quick capture finished. ${count} item${count===1?'':'s'} captured and ready to process. You can process them now, or later from Needs Review when you have better signal.`);
+}
+
+/* =========================================================
+   GEMINI READING
+========================================================= */
+function buildGeminiPrompt(){
+  const todayStr = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  return `You are reading a photo of food packaging from a UK supermarket delivery. Today's actual date is ${todayStr}.
+
+Identify:
+1. The product name (brief, as printed on the pack)
+2. Whether the date shown is a "Best Before" or "Use By" date
+3. The date itself
+
+Important: UK packaging often prints only the day and month (e.g. "13 AUG") with no year. If no year is printed, you MUST assume it refers to the next upcoming occurrence of that day/month on or after today's date above — never a past year. This item has just been delivered, so its date is always in the near future relative to today, typically within the next few months.
+
+Respond with ONLY JSON, no other text, in exactly this format:
+{"name": "Product Name", "dateType": "Best Before", "expiryDate": "YYYY-MM-DD", "confidence": "high"}
+
+Use "confidence": "low" if the photo is blurry, the date or name is not clearly legible, or you are guessing at any part of it.
+If you genuinely cannot determine the name or date at all, use null for that field.`;
+}
+
+async function callGemini(photos, notes){
+  const apiKey = settings.geminiKey;
+  const model = settings.geminiModel || 'gemini-3.6-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const parts = [{ text: buildGeminiPrompt() + (notes ? `\n\nA note from the user about this item: ${notes}` : '') }];
+  photos.forEach(p=>{
+    parts.push({ inline_data: { mime_type: 'image/jpeg', data: dataUrlToBase64(p) } });
+  });
+  const body = {
+    contents: [{ parts }],
+    generationConfig: { response_mime_type: 'application/json', temperature: 0.1 }
+  };
+  const controller = new AbortController();
+  const timeoutId = setTimeout(()=>controller.abort(), 40000); // give up after 40s rather than hang forever on a weak connection
+  let res;
+  try{
+    res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body), signal: controller.signal });
+  }catch(err){
+    if(err.name === 'AbortError'){
+      throw new Error('Gemini took too long to respond (over 40 seconds) — likely a weak connection. Try again with better signal or Wi-Fi.');
+    }
+    throw new Error('Could not reach Gemini: ' + err.message);
+  }finally{
+    clearTimeout(timeoutId);
+  }
+  if(!res.ok){
+    const errText = await res.text().catch(()=> '');
+    throw new Error(`Gemini request failed (${res.status}): ${errText.slice(0,200)}`);
+  }
+  const data = await res.json();
+  const text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+  if(!text) throw new Error('Gemini returned an unexpected response.');
+  return JSON.parse(text);
+}
+
+async function testGeminiKey(){
+  const resultEl = document.getElementById('testKeyResult');
+  if(!settings.geminiKey){
+    resultEl.textContent = 'No key saved yet — paste one above first.';
+    resultEl.style.color = 'var(--danger)';
+    return;
+  }
+  resultEl.textContent = 'Testing…';
+  resultEl.style.color = 'var(--ink-soft)';
+  const model = settings.geminiModel || 'gemini-3.6-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(settings.geminiKey)}`;
+  try{
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ contents:[{parts:[{text:'Reply with the single word: OK'}]}] })
+    });
+    const bodyText = await res.text();
+    if(res.ok){
+      resultEl.textContent = '✅ Success — this key and model work.';
+      resultEl.style.color = 'var(--ok)';
+      speak('Success. The key works.');
+    } else {
+      resultEl.textContent = `❌ Error ${res.status}: ${bodyText.slice(0,300)}`;
+      resultEl.style.color = 'var(--danger)';
+      speak('The test failed. See the error message on screen — a screenshot of this would help fix it.');
+    }
+  }catch(err){
+    resultEl.textContent = `❌ Could not reach Google at all: ${err.message}`;
+    resultEl.style.color = 'var(--danger)';
+    speak('Could not reach Google at all. Check your internet connection.');
+  }
+}
+
+function normalizeExpiryDate(result){
+  if(result && result.expiryDate && /^\d{4}-\d{2}-\d{2}$/.test(result.expiryDate)){
+    if(daysUntil(result.expiryDate) < -3){
+      // Likely a missing-year misread — nudge forward a year rather than trust a date that's already well in the past
+      const d = new Date(result.expiryDate + 'T00:00:00');
+      d.setFullYear(d.getFullYear() + 1);
+      result.expiryDate = isoOf(d);
+    }
+  }
+  return result;
+}
+
+function ensureOpenBatch(){
+  if(!state.batchOpen){
+    state.latestBatchId += 1;
+    state.batchOpen = true;
+  }
+}
+
+async function finishItemAndReturn(){
   if(currentItem.photos.length===0){ goHome(); return; }
+  const photos = currentItem.photos;
+  const notes = currentItem.notes;
+  const itemId = currentItem.id;
+
+  // Safety net: whatever happens below, if something unexpected slips through
+  // and we're still sat on the photo-options screen with nothing having navigated
+  // us away, force a return to Home rather than leaving the user stuck.
+  let navigated = false;
+  const forceHomeIfStuck = async ()=>{
+    if(!navigated){
+      console.error('finishItemAndReturn did not navigate — forcing return to Home.');
+      toast('Something went wrong — returned to Home. This item was not lost, check Menu → Needs Review.');
+      try{ await saveAsNeedsReview(itemId, photos, notes, 'Recovered after an unexpected error.'); }catch(e){ console.error(e); }
+      startNewItem(); showScreen('home'); refreshHome();
+      navigated = true;
+    }
+  };
+
+  try{
+    if(!settings.geminiKey){
+      await saveAsNeedsReview(itemId, photos, notes);
+      speak('No Gemini key is set, so this has been queued for your computer instead.');
+      startNewItem(); showScreen('home'); refreshHome();
+      navigated = true;
+      return;
+    }
+
+    let cancelled = false;
+    spinnerCancelBtn = async ()=>{
+      cancelled = true;
+      try{ await saveAsNeedsReview(itemId, photos, notes, 'Cancelled by user after Gemini took too long.'); }catch(e){ console.error(e); }
+      speak('Cancelled. Queued for your computer instead.');
+      startNewItem(); showScreen('home'); refreshHome();
+      navigated = true;
+    };
+    showSpinner('Asking Gemini to read this item…', true);
+    try{
+      const result = normalizeExpiryDate(await callGemini(photos, notes));
+      if(cancelled) return;
+      hideSpinner();
+      if(result.name && result.expiryDate && result.confidence === 'high'){
+        saveAsConfirmed(itemId, photos, notes, result);
+        speak(`${result.name} saved. Due ${formatDatePretty(result.expiryDate)}.`);
+        toast('Item saved');
+        startNewItem(); showScreen('home'); refreshHome();
+        navigated = true;
+      } else {
+        // low confidence or partial — quick confirm
+        pendingGeminiResult = { itemId, photos, notes, result };
+        document.getElementById('confirmNameText').textContent = result.name || 'Not detected';
+        document.getElementById('confirmDateText').textContent = result.expiryDate ? `${result.dateType||'Best Before'}: ${formatDatePretty(result.expiryDate)}` : 'Not detected';
+        showScreen('confirm');
+        navigated = true; // confirm screen is a valid, intentional destination
+        speak(`Gemini isn't fully sure about this one. ${result.name?'I think it says '+result.name+'.':''} ${result.expiryDate?(result.dateType||'Best Before')+' '+formatDatePretty(result.expiryDate)+'.':''} Is that right?`);
+      }
+    }catch(err){
+      console.error(err);
+      hideSpinner();
+      if(cancelled) return; // already handled by the cancel button
+      await saveAsNeedsReview(itemId, photos, notes, err.message);
+      speak('Could not reach Gemini, so this has been queued for your computer instead.');
+      toast('Gemini error: ' + err.message.slice(0,100));
+      startNewItem(); showScreen('home'); refreshHome();
+      navigated = true;
+    }finally{
+      spinnerCancelBtn = null;
+    }
+  }catch(outerErr){
+    console.error('Unexpected error in finishItemAndReturn', outerErr);
+    hideSpinner();
+  }finally{
+    await forceHomeIfStuck();
+  }
+}
+
+let pendingGeminiResult = null;
+
+async function confirmDetection(yes){
+  if(!pendingGeminiResult){ showScreen('home'); return; }
+  const { itemId, photos, notes, result } = pendingGeminiResult;
+  if(yes && result.name && result.expiryDate){
+    saveAsConfirmed(itemId, photos, notes, result);
+    speak('Saved.');
+    toast('Item saved');
+  } else {
+    await saveAsNeedsReview(itemId, photos, notes);
+    speak('Queued for your computer instead.');
+  }
+  pendingGeminiResult = null;
+  startNewItem();
+  showScreen('home'); refreshHome();
+}
+async function markCurrentForReview(){
+  if(!pendingGeminiResult){ showScreen('home'); return; }
+  const { itemId, photos, notes } = pendingGeminiResult;
+  await saveAsNeedsReview(itemId, photos, notes);
+  pendingGeminiResult = null;
+  speak('Queued for your computer.');
+  startNewItem();
+  showScreen('home'); refreshHome();
+}
+
+function saveAsConfirmed(itemId, photos, notes, result){
+  ensureOpenBatch();
   const item = {
-    id: currentItem.id,
-    name: null,
-    dateType: null,
-    expiryDate: null,
-    notes: currentItem.notes,
-    photos: currentItem.photos,
-    status: 'needs_review',
-    addedAt: Date.now(),
-    isNew: true
+    id: itemId, name: result.name, dateType: result.dateType || 'Best Before',
+    expiryDate: result.expiryDate, notes, photos: [],
+    status: 'confirmed', addedAt: Date.now(), batchId: state.latestBatchId
+  };
+  state.items.push(item);
+  sessionAdded.push(item.id);
+  const key = item.name.toLowerCase();
+  if(!state.history[key]) state.history[key] = {displayName:item.name, count:0, lastAdded:0};
+  state.history[key].count += 1;
+  state.history[key].lastAdded = Date.now();
+  state.history[key].displayName = item.name;
+  saveState();
+}
+async function saveAsNeedsReview(itemId, photos, notes, errorMsg){
+  ensureOpenBatch();
+  const photoIds = await idbStorePhotoSet(photos || []);
+  const item = {
+    id: itemId, name: null, dateType: null, expiryDate: null, notes,
+    photoIds, status: 'needs_review', addedAt: Date.now(), batchId: state.latestBatchId,
+    errorMsg: errorMsg || null
   };
   state.items.push(item);
   sessionAdded.push(item.id);
   saveState();
-  toast('Item saved');
-  speak('Item saved. Ready for the next one.');
-  startNewItem();
-  showScreen('home');
-  refreshHome();
 }
 
 /* =========================================================
@@ -457,20 +883,24 @@ function saveNoteAndReturn(){
   currentItem.notes = document.getElementById('notesInput').value.trim();
   document.getElementById('notesInput').value = '';
   speak('Note saved.');
-  showScreen('home');
-  refreshHome();
+  showScreen('home'); refreshHome();
 }
 
 /* =========================================================
    FINISH SHOP
 ========================================================= */
 function finishShop(){
-  const pendingCount = state.items.filter(i=>i.status==='needs_review').length;
-  showScreen('review');
-  if(pendingCount===0){
-    speak('No items are waiting to be read yet.');
+  state.batchOpen = false;
+  saveState();
+  const confirmedCount = sessionAdded.filter(id=>{ const it=state.items.find(i=>i.id===id); return it && it.status==='confirmed'; }).length;
+  const reviewCount = sessionAdded.filter(id=>{ const it=state.items.find(i=>i.id===id); return it && it.status==='needs_review'; }).length;
+  showScreen('list');
+  if(sessionAdded.length===0){
+    speak('You have not added any items yet.');
+  } else if(reviewCount===0){
+    speak(`Shop finished. ${confirmedCount} item${confirmedCount>1?'s':''} confirmed and highlighted as new.`);
   } else {
-    speak(`${pendingCount} item${pendingCount>1?'s are':' is'} waiting to be read. Send the photos to your computer when you're ready.`);
+    speak(`Shop finished. ${confirmedCount} confirmed, ${reviewCount} need review on your computer.`);
   }
   sessionAdded = [];
 }
@@ -484,17 +914,18 @@ function renderList(){
   let items = state.items.filter(it => it.status==='confirmed' && it.name && it.name.toLowerCase().includes(query));
   items.sort((a,b)=>(a.expiryDate||'').localeCompare(b.expiryDate||''));
   if(items.length===0){
-    container.innerHTML = `<div class="subtle">Nothing confirmed yet. Items appear here once read on your computer and imported back.</div>`;
+    container.innerHTML = `<div class="subtle">Nothing confirmed yet.</div>`;
     return;
   }
   container.innerHTML = items.map(it=>{
     const urg = urgencyClass(it.expiryDate);
-    return `<div class="item-card ${it.isNew?'new-item':''}">
+    const isNew = isItemHighlighted(it);
+    return `<div class="item-card ${isNew?'new-item':''}">
       <div class="iname">${escapeHtml(it.name)}</div>
       <div class="imeta ${urg}">${it.dateType}: ${formatDatePretty(it.expiryDate)} — ${formatDaysLabel(it.expiryDate)}</div>
       ${it.notes?`<div class="hint">${escapeHtml(it.notes)}</div>`:''}
       <div class="actions">
-        ${it.isNew?`<button onclick="markReviewed('${it.id}')">Mark reviewed</button>`:''}
+        ${isNew?`<button onclick="dismissHighlight('${it.id}')">Dismiss highlight</button>`:''}
         <button onclick="deleteItem('${it.id}')">Delete</button>
       </div></div>`;
   }).join('');
@@ -505,8 +936,14 @@ function readOutList(){
   const parts = items.slice(0,15).map(it=>`${it.name}, ${formatDaysLabel(it.expiryDate)}`);
   speak(`You have ${items.length} items. ${parts.join('. ')}.`);
 }
-function markReviewed(id){ const it=state.items.find(i=>i.id===id); if(it){ it.isNew=false; saveState(); renderList(); } }
-function deleteItem(id){ if(!confirm('Delete this item?')) return; state.items=state.items.filter(i=>i.id!==id); saveState(); renderList(); renderCalendar(); renderReview(); }
+function dismissHighlight(id){ const it=state.items.find(i=>i.id===id); if(it){ it.dismissed=true; saveState(); renderList(); } }
+async function deleteItem(id){
+  if(!confirm('Delete this item?')) return;
+  const it = state.items.find(i=>i.id===id);
+  if(it && it.photoIds && it.photoIds.length>0){ try{ await idbDeletePhotos(it.photoIds); }catch(e){ console.error(e); } }
+  state.items=state.items.filter(i=>i.id!==id);
+  saveState(); renderList(); renderCalendar(); renderReview();
+}
 
 /* =========================================================
    CALENDAR
@@ -514,6 +951,9 @@ function deleteItem(id){ if(!confirm('Delete this item?')) return; state.items=s
 let calDate = new Date(); calDate.setDate(1);
 function calShiftMonth(delta){ calDate.setMonth(calDate.getMonth()+delta); renderCalendar(); }
 function isoOf(d){ return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`; }
+function getMonday(d){ const day=(d.getDay()+6)%7; const m=new Date(d); m.setDate(d.getDate()-day); m.setHours(0,0,0,0); return m; }
+function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+
 function renderCalendar(){
   const year=calDate.getFullYear(), month=calDate.getMonth();
   document.getElementById('calMonthLabel').textContent = calDate.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
@@ -538,7 +978,7 @@ function renderCalendar(){
         document.querySelectorAll('.cal-cell').forEach(c=>c.classList.remove('selected'));
         cell.classList.add('selected');
         document.getElementById('calDayDetail').innerHTML = `<div class="section-title" style="font-size:20px;">${formatDatePretty(iso)}</div>` +
-          dayItems.map(it=>`<div class="item-card"><div class="iname">${escapeHtml(it.name)}</div><div class="imeta">${it.dateType}</div></div>`).join('');
+          dayItems.map(it=>`<div class="item-card ${isItemHighlighted(it)?'new-item':''}"><div class="iname">${escapeHtml(it.name)}</div><div class="imeta">${it.dateType}</div></div>`).join('');
         speak(`${formatDatePretty(iso)}. ${dayItems.map(it=>it.name).join(', ')}.`);
       };
     }
@@ -548,43 +988,218 @@ function renderCalendar(){
 }
 
 /* =========================================================
-   REVIEW NEEDED — ZIP EXPORT + SHARE
+   REPORTS — PDF
 ========================================================= */
-function renderReview(){
+function generateCalendarReportPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+  const items = state.items.filter(it=>it.status==='confirmed');
+  const byDate = {}; items.forEach(it=>{(byDate[it.expiryDate]=byDate[it.expiryDate]||[]).push(it);});
+  const start = getMonday(new Date());
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const marginX=8, marginY=16;
+  const cols=7, rows=4;
+  const cellW = (pageW - marginX*2)/cols;
+  const cellH = (pageH - marginY*2)/rows;
+
+  doc.setFontSize(14);
+  doc.text(`Larder Ledger — 4 Week Calendar (from ${formatDatePretty(isoOf(start))})`, marginX, 10);
+
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const date = addDays(start, r*7+c);
+      const iso = isoOf(date);
+      const x = marginX + c*cellW;
+      const y = marginY + r*cellH;
+      doc.setDrawColor(180);
+      doc.rect(x,y,cellW,cellH);
+      doc.setFontSize(8);
+      doc.setFont(undefined,'bold');
+      doc.text(date.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'}), x+2, y+5);
+      doc.setFont(undefined,'normal');
+      let ty = y+10;
+      (byDate[iso]||[]).forEach(it=>{
+        if(ty > y+cellH-2) return;
+        const lines = doc.splitTextToSize(it.name, cellW-4);
+        lines.forEach(line=>{
+          if(ty > y+cellH-2) return;
+          if(isItemHighlighted(it)){
+            const tw = doc.getTextWidth(line);
+            doc.setFillColor(255,213,61);
+            doc.rect(x+1, ty-3.2, Math.min(tw+1.5,cellW-3), 4, 'F');
+          }
+          doc.text(line, x+2, ty);
+          ty += 4;
+        });
+      });
+    }
+  }
+  doc.save(`larder-ledger-calendar-${dateStamp()}.pdf`);
+  toast('Calendar report downloaded');
+}
+
+function generateListReportPDF(){
+  const { jsPDF } = window.jspdf;
+  const items = state.items.filter(it=>it.status==='confirmed');
+  const byDate = {}; items.forEach(it=>{(byDate[it.expiryDate]=byDate[it.expiryDate]||[]).push(it);});
+  const start = getMonday(new Date());
+  const dates = [];
+  for(let i=0;i<14;i++){ const d=addDays(start,i); const iso=isoOf(d); if(byDate[iso]) dates.push({iso, date:d, items: byDate[iso]}); }
+
+  const doc = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+  const marginX=15, marginTop=22, marginBottom=15;
+  const pageH = doc.internal.pageSize.getHeight();
+  const pageW = doc.internal.pageSize.getWidth();
+  const usableHeightPerPage = pageH - marginTop - marginBottom;
+  const maxTotalHeight = usableHeightPerPage*2;
+
+  if(dates.length===0){
+    doc.setFontSize(16);
+    doc.text('Larder Ledger — 2 Week List', marginX, 15);
+    doc.setFontSize(12);
+    doc.text('Nothing due in the next two weeks.', marginX, 30);
+    doc.save(`larder-ledger-list-${dateStamp()}.pdf`);
+    return;
+  }
+
+  let fontSize = 26, layout;
+  while(fontSize >= 10){
+    doc.setFontSize(fontSize);
+    const headerLH = fontSize*0.42;
+    const itemLH = fontSize*0.38;
+    let totalH = 0;
+    const blocks = dates.map(d=>{
+      const text = d.items.map(it=>it.name).join(', ');
+      const lines = doc.splitTextToSize(text, pageW - marginX*2);
+      const blockH = headerLH + lines.length*itemLH + itemLH*0.6;
+      totalH += blockH;
+      return {
+        header: d.date.toLocaleDateString('en-GB',{weekday:'short', day:'2-digit', month:'short'}),
+        lines, blockH,
+        hasNew: d.items.some(it=>isItemHighlighted(it))
+      };
+    });
+    if(totalH <= maxTotalHeight || fontSize===10){ layout = {fontSize, headerLH, itemLH, blocks}; break; }
+    fontSize -= 1;
+  }
+
+  doc.setFontSize(14);
+  doc.text('Larder Ledger — 2 Week List', marginX, 14);
+  doc.setFontSize(layout.fontSize);
+  let y = marginTop;
+  layout.blocks.forEach(b=>{
+    if(y + b.blockH > pageH - marginBottom){ doc.addPage(); y = marginTop; }
+    if(b.hasNew){
+      doc.setFillColor(255,213,61);
+      doc.rect(marginX-2, y-layout.headerLH+1, pageW-marginX*2+4, b.blockH-2, 'F');
+    }
+    doc.setFont(undefined,'bold');
+    doc.text(b.header, marginX, y);
+    y += layout.headerLH;
+    doc.setFont(undefined,'normal');
+    b.lines.forEach(line=>{ doc.text(line, marginX, y); y += layout.itemLH; });
+    y += layout.itemLH*0.6;
+  });
+  doc.save(`larder-ledger-list-${dateStamp()}.pdf`);
+  toast('List report downloaded');
+}
+
+/* =========================================================
+   EXPORT DATA
+========================================================= */
+function getExportRows(){
+  return state.items.filter(it=>it.status==='confirmed').sort((a,b)=>(a.expiryDate||'').localeCompare(b.expiryDate||'')).map(it=>({
+    name: it.name, dateType: it.dateType, expiryDate: it.expiryDate,
+    daysLeft: daysUntil(it.expiryDate), notes: it.notes || ''
+  }));
+}
+function exportDataJSON(){
+  downloadBlob(JSON.stringify(getExportRows(), null, 2), 'application/json', `larder-ledger-export-${dateStamp()}.json`);
+}
+function exportDataExcel(){
+  const rows = getExportRows().map(r=>({
+    'Product Name': r.name, 'Date Type': r.dateType, 'Expiry Date': r.expiryDate,
+    'Days Left': r.daysLeft, 'Notes': r.notes
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Larder Ledger');
+  XLSX.writeFile(wb, `larder-ledger-export-${dateStamp()}.xlsx`);
+  toast('Excel file downloaded');
+}
+function exportDataWord(){
+  const rows = getExportRows();
+  const rowsHtml = rows.map(r=>`<tr><td>${escapeHtml(r.name)}</td><td>${r.dateType}</td><td>${formatDatePretty(r.expiryDate)}</td><td>${r.daysLeft}</td><td>${escapeHtml(r.notes)}</td></tr>`).join('');
+  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset='utf-8'><title>Larder Ledger Export</title></head>
+  <body>
+  <h1>Larder Ledger — Export (${dateStamp()})</h1>
+  <table border="1" cellspacing="0" cellpadding="4">
+  <tr><th>Product</th><th>Type</th><th>Date</th><th>Days Left</th><th>Notes</th></tr>
+  ${rowsHtml}
+  </table>
+  </body></html>`;
+  downloadBlob(html, 'application/msword', `larder-ledger-export-${dateStamp()}.doc`);
+}
+
+/* =========================================================
+   REVIEW NEEDED — ZIP EXPORT + SHARE (fallback path)
+========================================================= */
+async function clearReviewPhotos(){
+  const withPhotos = state.items.filter(it=>it.status==='needs_review' && it.photoIds && it.photoIds.length>0);
+  if(withPhotos.length===0){ toast('Nothing to clear'); return; }
+  if(!confirm(`This removes the photos from ${withPhotos.length} stuck item(s) to free up space on your phone. The items themselves stay in the list, but you'll need to retake photos for them. Continue?`)) return;
+  const allIds = withPhotos.flatMap(it=>it.photoIds);
+  try{ await idbDeletePhotos(allIds); }catch(e){ console.error(e); }
+  withPhotos.forEach(it=>{ it.photoIds = []; it.errorMsg = 'Photos cleared to free up space — retake this item.'; });
+  const ok = saveState();
+  renderReview();
+  if(ok) toast('Photos cleared — space freed up');
+}
+
+async function renderReview(){
   const items = state.items.filter(it=>it.status==='needs_review');
   document.getElementById('reviewBadge').textContent = items.length ? `(${items.length})` : '';
   document.getElementById('btnSendPhotos').disabled = items.length===0;
+  const clearBtn = document.getElementById('btnClearReviewPhotos');
+  if(clearBtn) clearBtn.disabled = items.filter(it=>it.photoIds && it.photoIds.length>0).length===0;
+  const processBtn = document.getElementById('btnProcessAll');
+  if(processBtn) processBtn.disabled = items.length===0 || !settings.geminiKey;
   const container = document.getElementById('reviewContainer');
   if(items.length===0){ container.innerHTML = `<div class="subtle">Nothing needs review right now.</div>`; return; }
   container.innerHTML = items.map(it=>`
     <div class="item-card status-review">
       <div class="iname">Item added ${new Date(it.addedAt).toLocaleDateString('en-GB')}</div>
-      <div class="thumb-row">${it.photos.map(p=>`<img src="${p}">`).join('')}</div>
+      <div class="thumb-row" id="thumbs-${it.id}"><span class="hint">Loading photos…</span></div>
       ${it.notes?`<div class="hint">${escapeHtml(it.notes)}</div>`:''}
+      ${it.errorMsg?`<div class="hint" style="color:var(--danger);">${escapeHtml(it.errorMsg)}</div>`:''}
       <div class="actions"><button onclick="deleteItem('${it.id}')">Delete</button></div>
     </div>`).join('');
+  // Load thumbnails progressively so the list itself appears instantly
+  items.forEach(async it=>{
+    if(!it.photoIds || it.photoIds.length===0){
+      const wrap = document.getElementById('thumbs-'+it.id);
+      if(wrap) wrap.innerHTML = '';
+      return;
+    }
+    const photos = await idbGetPhotos(it.photoIds);
+    const wrap = document.getElementById('thumbs-'+it.id);
+    if(wrap) wrap.innerHTML = photos.filter(Boolean).map(p=>`<img src="${p}">`).join('');
+  });
 }
-
-function dataUrlToBase64(dataUrl){
-  return dataUrl.split(',')[1];
-}
-
 async function exportReviewZip(){
   const items = state.items.filter(it=>it.status==='needs_review');
   if(items.length===0){ toast('Nothing to send'); speak('Nothing needs review right now.'); return; }
-
   showSpinner('Preparing photos…');
   const zip = new JSZip();
   const idList = [];
-  items.forEach(it=>{
+  for(const it of items){
     idList.push(it.id + (it.notes ? `  (note: ${it.notes})` : ''));
-    it.photos.forEach((p, idx)=>{
-      zip.file(`LL_${it.id}_${idx+1}.jpg`, dataUrlToBase64(p), {base64:true});
-    });
-  });
-
-  const instructions =
-`Larder Ledger — photos to read
+    const photos = await idbGetPhotos(it.photoIds || []);
+    photos.forEach((p, idx)=>{ if(p) zip.file(`LL_${it.id}_${idx+1}.jpg`, dataUrlToBase64(p), {base64:true}); });
+  }
+  const instructions = `Larder Ledger — photos to read
 
 Please look at each set of photos below (grouped by the ID in the filename, e.g. all files starting "LL_abc123_" belong to the same item) and work out:
 1. The product name
@@ -593,50 +1208,35 @@ Please look at each set of photos below (grouped by the ID in the filename, e.g.
 
 Reply with ONLY a JSON array, no other text, in exactly this format:
 [
-  {"id": "abc123", "name": "Product Name", "dateType": "Best Before", "expiryDate": "2026-08-01"},
-  {"id": "def456", "name": "Another Product", "dateType": "Use By", "expiryDate": "2026-07-20"}
+  {"id": "abc123", "name": "Product Name", "dateType": "Best Before", "expiryDate": "2026-08-01"}
 ]
 
-Use the ID exactly as it appears in the filenames (the part between "LL_" and the photo number).
-Dates must be in YYYY-MM-DD format.
+Use the ID exactly as it appears in the filenames. Dates must be YYYY-MM-DD.
 
 Item IDs in this batch, with any notes attached:
 ${idList.map(l=>'- '+l).join('\n')}
 `;
   zip.file('instructions.txt', instructions);
-
   const blob = await zip.generateAsync({type:'blob'});
   hideSpinner();
-
-  const fileName = `larder-ledger-photos-${new Date().toISOString().slice(0,10)}.zip`;
+  const fileName = `larder-ledger-photos-${dateStamp()}.zip`;
   const file = new File([blob], fileName, {type:'application/zip'});
-
   if(navigator.canShare && navigator.canShare({files:[file]})){
     try{
-      await navigator.share({
-        files: [file],
-        title: 'Larder Ledger photos',
-        text: 'Food packaging photos to read — see instructions.txt inside.'
-      });
+      await navigator.share({ files:[file], title:'Larder Ledger photos', text:'Food packaging photos to read — see instructions.txt inside.' });
       toast('Sent');
-      speak('Sent. Open the file on your computer, extract it, then follow the instructions inside to get Claude to read it.');
+      speak('Sent. Open the file on your computer, extract it, then follow the instructions inside.');
       return;
-    }catch(err){
-      if(err.name === 'AbortError'){ return; }
-      console.error(err);
-    }
+    }catch(err){ if(err.name==='AbortError') return; console.error(err); }
   }
-
-  // Fallback: plain download
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = fileName;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
   toast('Downloaded — attach this file to an email to yourself');
-  speak('Downloaded. Please attach this file to an email to yourself, then open it on your computer.');
+  speak('Downloaded. Please attach this file to an email to yourself.');
 }
-
 function importReviewResults(event){
   const file = event.target.files[0]; if(!file) return;
   const reader = new FileReader();
@@ -647,11 +1247,10 @@ function importReviewResults(event){
       results.forEach(r=>{
         const it = state.items.find(i=>i.id===r.id);
         if(it && r.name && r.expiryDate){
-          it.name = r.name;
-          it.dateType = r.dateType || 'Best Before';
-          it.expiryDate = r.expiryDate;
+          it.name = r.name; it.dateType = r.dateType || 'Best Before'; it.expiryDate = r.expiryDate;
           it.status = 'confirmed';
-          it.photos = [];
+          if(it.photoIds && it.photoIds.length){ idbDeletePhotos(it.photoIds).catch(e=>console.error(e)); }
+          it.photoIds = [];
           const key = it.name.toLowerCase();
           if(!state.history[key]) state.history[key] = {displayName:it.name, count:0, lastAdded:0};
           state.history[key].count += 1;
@@ -660,18 +1259,113 @@ function importReviewResults(event){
           matched++;
         }
       });
-      purgeExpired();
-      saveState();
+      purgeExpired(); saveState();
       renderReview(); renderList(); renderCalendar();
       toast(`${matched} item(s) updated`);
       speak(`${matched} item${matched===1?'':'s'} updated from your computer.`);
-    }catch(err){
-      console.error(err);
-      alert('That file could not be read. Make sure it is the results.json file from the Desktop Helper.');
-    }
+    }catch(err){ console.error(err); alert('That file could not be read.'); }
   };
   reader.readAsText(file);
   event.target.value = '';
+}
+
+/* =========================================================
+   PROCESS ALL (batch-run every Needs Review item through Gemini,
+   used after a Quick Capture whole-shop session, or to retry failures)
+========================================================= */
+function askQuickConfirmForItem(result){
+  // Reuses the existing single-item confirm screen's Yes/No buttons for a moment,
+  // then restores their normal click handlers afterwards so the live capture flow
+  // (finishItemAndReturn / confirmDetection) keeps working as before.
+  return new Promise(resolve=>{
+    document.getElementById('confirmNameText').textContent = result.name || 'Not detected';
+    document.getElementById('confirmDateText').textContent = result.expiryDate ? `${result.dateType||'Best Before'}: ${formatDatePretty(result.expiryDate)}` : 'Not detected';
+    showScreen('confirm');
+    speak(`Gemini isn't fully sure about this one. ${result.name?'I think it says '+result.name+'.':''} ${result.expiryDate?(result.dateType||'Best Before')+' '+formatDatePretty(result.expiryDate)+'.':''} Is that right?`);
+
+    const yesBtn = document.querySelector('#screen-confirm .btn-yes');
+    const noBtn = document.querySelector('#screen-confirm .btn-no');
+    const skipBtn = document.querySelector('#screen-confirm .bigbtn.small');
+    const originalYes = yesBtn.onclick, originalNo = noBtn.onclick, originalSkip = skipBtn.onclick;
+    function cleanup(){ yesBtn.onclick = originalYes; noBtn.onclick = originalNo; skipBtn.onclick = originalSkip; }
+
+    yesBtn.onclick = ()=>{ cleanup(); speak('Saved.'); resolve({action:'confirm'}); };
+    noBtn.onclick = ()=>{ cleanup(); speak('Kept for review.'); resolve({action:'reject'}); };
+    skipBtn.onclick = ()=>{ cleanup(); speak('Stopped processing. You can resume any time from Needs Review.'); resolve({action:'stop'}); };
+  });
+}
+
+async function processAllReviewItems(){
+  const items = state.items.filter(it=>it.status==='needs_review');
+  if(items.length===0){ toast('Nothing to process'); return; }
+  if(!settings.geminiKey){ toast('Add a Gemini key in Settings first'); speak('Please add a Gemini key in Settings first.'); return; }
+
+  let stopped = false;
+  let confirmedCount = 0, manualConfirmedCount = 0, failedCount = 0;
+
+  spinnerCancelBtn = ()=>{ stopped = true; };
+
+  for(let i=0; i<items.length; i++){
+    if(stopped) break;
+    const it = items[i];
+    showSpinner(`Processing item ${i+1} of ${items.length}…`, true, 'Stop after this item');
+
+    const photos = (await idbGetPhotos(it.photoIds||[])).filter(Boolean);
+    if(photos.length===0){
+      it.errorMsg = 'No photos available for this item — it may need retaking.';
+      failedCount++;
+      saveState();
+      continue;
+    }
+
+    try{
+      const result = normalizeExpiryDate(await callGemini(photos, it.notes));
+      if(stopped) break;
+
+      if(result.name && result.expiryDate && result.confidence === 'high'){
+        if(it.photoIds && it.photoIds.length) idbDeletePhotos(it.photoIds).catch(e=>console.error(e));
+        it.name = result.name; it.dateType = result.dateType || 'Best Before'; it.expiryDate = result.expiryDate;
+        it.status = 'confirmed'; it.photoIds = []; it.errorMsg = null;
+        const key = it.name.toLowerCase();
+        if(!state.history[key]) state.history[key] = {displayName:it.name, count:0, lastAdded:0};
+        state.history[key].count += 1; state.history[key].lastAdded = Date.now(); state.history[key].displayName = it.name;
+        confirmedCount++;
+      } else {
+        hideSpinner();
+        const outcome = await askQuickConfirmForItem(result);
+        if(outcome.action === 'confirm' && result.name && result.expiryDate){
+          if(it.photoIds && it.photoIds.length) idbDeletePhotos(it.photoIds).catch(e=>console.error(e));
+          it.name = result.name; it.dateType = result.dateType || 'Best Before'; it.expiryDate = result.expiryDate;
+          it.status = 'confirmed'; it.photoIds = []; it.errorMsg = null;
+          const key = it.name.toLowerCase();
+          if(!state.history[key]) state.history[key] = {displayName:it.name, count:0, lastAdded:0};
+          state.history[key].count += 1; state.history[key].lastAdded = Date.now(); state.history[key].displayName = it.name;
+          manualConfirmedCount++;
+        } else if(outcome.action === 'stop'){
+          stopped = true;
+        } else {
+          it.errorMsg = 'Marked as incorrect during processing — needs manual review.';
+          failedCount++;
+        }
+      }
+    }catch(err){
+      console.error(err);
+      it.errorMsg = err.message;
+      failedCount++;
+    }
+    saveState();
+  }
+
+  hideSpinner();
+  spinnerCancelBtn = null;
+  showScreen('review');
+  const parts = [];
+  if(confirmedCount) parts.push(`${confirmedCount} confirmed automatically`);
+  if(manualConfirmedCount) parts.push(`${manualConfirmedCount} confirmed after checking with you`);
+  if(failedCount) parts.push(`${failedCount} still need review`);
+  const msg = 'Processing finished. ' + (parts.length ? parts.join(', ') + '.' : 'Nothing was processed.');
+  toast(msg);
+  speak(msg);
 }
 
 /* =========================================================
@@ -688,13 +1382,8 @@ function renderFrequent(){
    BACKUP
 ========================================================= */
 function exportBackup(){
-  const payload = { exportedAt:new Date().toISOString(), items: state.items, history: state.history };
-  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download=`larder-ledger-backup-${new Date().toISOString().slice(0,10)}.json`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  toast('Backup downloaded'); speak('Backup file downloaded.');
+  const payload = { exportedAt:new Date().toISOString(), items: state.items, history: state.history, latestBatchId: state.latestBatchId };
+  downloadBlob(JSON.stringify(payload,null,2), 'application/json', `larder-ledger-backup-${dateStamp()}.json`);
 }
 function importBackup(event){
   const file = event.target.files[0]; if(!file) return;
@@ -712,6 +1401,7 @@ function importBackup(event){
           if(h.lastAdded > state.history[k].lastAdded){ state.history[k].lastAdded=h.lastAdded; state.history[k].displayName=h.displayName; }
         }
       });
+      if(data.latestBatchId && data.latestBatchId > state.latestBatchId) state.latestBatchId = data.latestBatchId;
       purgeExpired(); saveState();
       renderList(); renderCalendar(); renderFrequent(); renderReview();
       toast(`${added} new item(s) merged`);
@@ -723,95 +1413,34 @@ function importBackup(event){
 }
 function clearAllData(){
   if(!confirm("This deletes everything on this device. Continue?")) return;
-  state.items=[]; state.history={}; saveState();
+  state.items=[]; state.history={}; state.latestBatchId=0; state.batchOpen=false; saveState();
   renderList(); renderCalendar(); renderFrequent(); renderReview();
   toast('All data cleared'); speak('All data cleared.');
 }
 
 /* =========================================================
-   REPORTS (PRINT / PDF)
-========================================================= */
-function mondayOnOrBefore(d){
-  const c = new Date(d); c.setHours(0,0,0,0);
-  let dow = c.getDay(); if(dow===0) dow=7; // Sun=7
-  c.setDate(c.getDate() - (dow-1));
-  return c;
-}
-function shortDow(d){ return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]; }
-function shortDate(d){ return d.getDate()+'-'+d.toLocaleDateString('en-GB',{month:'short'}); }
-
-function buildCalendarReportHTML(){
-  const items = state.items.filter(it=>it.status==='confirmed' && it.expiryDate);
-  const byDate = {};
-  items.forEach(it=>{ (byDate[it.expiryDate]=byDate[it.expiryDate]||[]).push(it); });
-
-  const start = mondayOnOrBefore(new Date());
-  const todayIso = isoOf(new Date());
-  const weeks = 4;
-  let rows = '';
-  for(let w=0; w<weeks; w++){
-    let cells = '';
-    for(let d=0; d<7; d++){
-      const day = new Date(start); day.setDate(day.getDate() + w*7 + d);
-      const iso = isoOf(day);
-      const dayItems = byDate[iso] || [];
-      const itemsHtml = dayItems.map(it=>`<span class="cal-item">${escapeHtml(it.name)}</span>`).join('');
-      cells += `<td class="${iso===todayIso?'today-cell':''}"><div class="cal-daynum">${shortDow(day)} ${shortDate(day)}</div>${itemsHtml}</td>`;
-    }
-    rows += `<tr>${cells}</tr>`;
-  }
-
-  return `
-    <h1>🥫 Larder Ledger — Calendar Report</h1>
-    <div class="print-sub">4 weeks from ${shortDate(start)} · Printed ${new Date().toLocaleDateString('en-GB')}</div>
-    <table><tbody>${rows}</tbody></table>`;
-}
-
-function buildBigListHTML(){
-  const items = state.items.filter(it=>it.status==='confirmed' && it.expiryDate)
-    .slice().sort((a,b)=>a.expiryDate.localeCompare(b.expiryDate));
-  if(items.length===0){
-    return `<h1>🥫 Larder Ledger — Big-Print List</h1><div class="print-sub">Printed ${new Date().toLocaleDateString('en-GB')}</div><div style="font-size:28px;">Nothing on your list yet.</div>`;
-  }
-  const byDate = {};
-  const order = [];
-  items.forEach(it=>{
-    if(!byDate[it.expiryDate]){ byDate[it.expiryDate]=[]; order.push(it.expiryDate); }
-    byDate[it.expiryDate].push(it.name);
-  });
-  const rows = order.map(iso=>{
-    const d = new Date(iso+'T00:00:00');
-    const label = `${shortDow(d)} ${shortDate(d)}`;
-    return `<div class="big-row"><span class="big-date">${label}</span><div class="big-items">${escapeHtml(byDate[iso].join(', '))}</div></div>`;
-  }).join('');
-  return `<h1>🥫 Larder Ledger — Big-Print List</h1><div class="print-sub">Printed ${new Date().toLocaleDateString('en-GB')}</div>${rows}`;
-}
-
-function printReport(type){
-  const html = type==='calendar' ? buildCalendarReportHTML() : buildBigListHTML();
-  document.getElementById('printArea').innerHTML = html;
-  document.body.classList.add('printing');
-  speak('Opening the print screen. Use Share to save this as a P D F, or choose a printer.');
-  setTimeout(()=>{ window.print(); }, 150);
-}
-window.addEventListener('afterprint', ()=>{
-  document.body.classList.remove('printing');
-  document.getElementById('printArea').innerHTML = '';
-});
-
-/* =========================================================
    SPINNER
 ========================================================= */
-function showSpinner(msg){
+let spinnerCancelBtn = null;
+function showSpinner(msg, allowCancel, cancelLabel){
   let el = document.getElementById('spinnerOverlay');
   if(!el){
     el = document.createElement('div');
     el.id = 'spinnerOverlay';
     el.className = 'spinner-overlay';
-    el.innerHTML = `<div class="spinner"></div><div id="spinnerMsg"></div>`;
+    el.innerHTML = `<div class="spinner"></div><div id="spinnerMsg"></div><div id="spinnerCancelWrap"></div>`;
     document.body.appendChild(el);
   }
   document.getElementById('spinnerMsg').textContent = msg;
+  const cancelWrap = document.getElementById('spinnerCancelWrap');
+  cancelWrap.innerHTML = '';
+  if(allowCancel){
+    const btn = document.createElement('button');
+    btn.textContent = cancelLabel || 'Stuck? Tap to cancel';
+    btn.style.cssText = 'margin-top:10px;background:rgba(255,255,255,0.15);color:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:10px;padding:10px 18px;font-size:15px;font-weight:700;';
+    btn.onclick = ()=>{ hideSpinner(); if(spinnerCancelBtn) spinnerCancelBtn(); };
+    cancelWrap.appendChild(btn);
+  }
   el.style.display = 'flex';
 }
 function hideSpinner(){ const el=document.getElementById('spinnerOverlay'); if(el) el.style.display='none'; }
@@ -822,7 +1451,7 @@ function hideSpinner(){ const el=document.getElementById('spinnerOverlay'); if(e
 loadAll();
 saveState();
 refreshHome();
+migrateLegacyPhotos().catch(e=>console.error('Photo migration error', e));
 </script>
-
-
-</body></html>
+</body>
+</html>
