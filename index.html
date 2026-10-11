@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Larder Ledger</title>
+<meta name="app-version" content="4.3.0">
+<!-- Larder Ledger v4.3.0 (11 Oct 2026): Edit any item + enter Needs Review items by hand. v4.2: Bulk Upload + Manual Entry. v4.1: Quick Capture. v4.0: IndexedDB photos, Gemini timeout/cancel. -->
+
 <style>
   :root{
     --bg: #FFFFFF; --ink: #0E1A14; --panel: #F4F6F2;
@@ -55,7 +58,11 @@
 
   .field-block{margin-bottom:18px;}
   .field-block label{display:block;font-weight:700;font-size:var(--fs-base);margin-bottom:6px;}
-  .field-block textarea, .field-block input[type=text], .field-block input[type=password]{width:100%;padding:14px;border-radius:12px;border:3px solid var(--border);font-size:var(--fs-lg);}
+  .version-tag{margin-top:28px;padding-top:12px;border-top:2px solid var(--panel);text-align:center;font-size:15px;font-weight:700;color:#4b5952;}
+  .seg-row{display:flex;gap:10px;}
+  .seg-row button{flex:1;background:#fff;color:var(--ink);border:3px solid var(--border);border-radius:var(--radius);padding:18px 8px;font-size:var(--fs-base);font-weight:800;min-height:68px;}
+  .seg-row button.on{background:var(--primary);color:#fff;border-color:var(--primary-dark);}
+  .field-block textarea, .field-block input[type=text], .field-block input[type=password], .field-block input[type=date]{width:100%;padding:14px;border-radius:12px;border:3px solid var(--border);font-size:var(--fs-lg);}
   .hint{font-size:15px;color:#4b5952;margin-top:6px;}
 
   .item-card{background:#fff;border:3px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
@@ -122,6 +129,8 @@
   <button class="bigbtn small" id="btnAddNotes" onclick="showScreen('notes')" disabled><span class="emoji">📝</span> Add Notes to This Item</button>
   <button class="bigbtn small" onclick="takePhoto('library')"><span class="emoji">🖼️</span> Upload Recent Photo</button>
   <button class="bigbtn small" onclick="startQuickCapture()"><span class="emoji">📸</span> Quick Capture (Whole Shop)</button>
+  <button class="bigbtn small" onclick="startBulk()"><span class="emoji">🗂️</span> Bulk Upload (Many Photos at Once)</button>
+  <button class="bigbtn small" onclick="startManual()"><span class="emoji">✍️</span> Add an Item Manually</button>
 
   <div style="margin-top:22px;">
     <button class="bigbtn accent" onclick="finishShop()"><span class="emoji">🏁</span> Finish Shop</button>
@@ -129,6 +138,7 @@
 
   <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none;">
   <input type="file" accept="image/*" id="libraryInput" style="display:none;">
+  <div class="version-tag" data-version-tag></div>
 </section>
 
 <!-- PHOTO OPTIONS -->
@@ -154,9 +164,53 @@
   <input type="file" accept="image/*" capture="environment" id="qcCameraInput" style="display:none;">
 </section>
 
+<!-- MANUAL ENTRY (no photo needed — counts in the list, calendar, reports and exports like any other item) -->
+<section class="screen" id="screen-manual">
+  <div class="section-title" id="manualTitle">Add an Item</div>
+  <div class="thumb-row" id="manualPhotos"></div>
+  <div class="field-block">
+    <label for="manualName">Product name</label>
+    <input type="text" id="manualName" list="manualNameList" autocomplete="off" placeholder="e.g. Semi-skimmed milk">
+    <datalist id="manualNameList"></datalist>
+    <div class="hint">Tip: tap the box, then tap the microphone on your iPhone's keyboard to speak the name. Things you've bought before appear as suggestions.</div>
+  </div>
+  <div class="field-block">
+    <label>Date type</label>
+    <div class="seg-row">
+      <button type="button" id="manualTypeBB" onclick="setManualType('Best Before')" aria-pressed="true">Best Before</button>
+      <button type="button" id="manualTypeUB" onclick="setManualType('Use By')" aria-pressed="false">Use By</button>
+    </div>
+  </div>
+  <div class="field-block">
+    <label for="manualDate">Date on the pack</label>
+    <input type="date" id="manualDate">
+  </div>
+  <div class="field-block">
+    <label for="manualNotes">Note (optional)</label>
+    <input type="text" id="manualNotes" placeholder="e.g. in the freezer">
+  </div>
+  <button class="bigbtn ok" id="manualBtnSave" onclick="saveManual(false)"><span class="emoji">✅</span> <span id="manualBtnSaveLabel">Save Item</span></button>
+  <button class="bigbtn small" id="manualBtnAnother" onclick="saveManual(true)"><span class="emoji">➕</span> Save &amp; Add Another</button>
+  <button class="link-btn" id="manualBtnCancel" onclick="cancelManual()" style="display:none;">Cancel — go back without saving</button>
+</section>
+
+<!-- BULK UPLOAD (pick many photos from camera roll; AI groups them into items and reads dates) -->
+<section class="screen" id="screen-bulk">
+  <div class="section-title">Bulk Upload</div>
+  <div class="subtle" id="bulkSummary"></div>
+  <div id="bulkNoKey"></div>
+  <button class="bigbtn primary" onclick="bulkChoosePhotos()"><span class="emoji">🖼️</span> Choose Photos</button>
+  <button class="bigbtn ok" id="bulkBtnRead" onclick="bulkReadAll()" disabled><span class="emoji">▶️</span> Read All Photos</button>
+  <div class="hint" id="bulkHint">Tip: tap your photos in the order you took them, so photos of the same item sit next to each other. One photo or several per item is fine — Gemini works out which photos belong together.</div>
+  <div class="thumb-row" id="bulkThumbs"></div>
+  <button class="link-btn" id="bulkBtnClear" onclick="bulkClear()">Clear selection</button>
+  <input type="file" accept="image/*" multiple id="bulkInput" style="display:none;">
+</section>
+
 <!-- GEMINI LOW-CONFIDENCE CONFIRM -->
 <section class="screen" id="screen-confirm">
   <div class="section-title">Is this right?</div>
+  <img id="confirmPhoto" class="photo-thumb" style="display:none;">
   <div class="speak-block"><div class="label">Product name</div><div id="confirmNameText">—</div></div>
   <div class="speak-block"><div class="label">Date found</div><div id="confirmDateText">—</div></div>
   <div class="yesno-row">
@@ -276,6 +330,7 @@
     <button class="bigbtn small" onclick="testGeminiKey()"><span class="emoji">🧪</span> Test Gemini Key</button>
     <div id="testKeyResult" class="hint" style="font-size:15px;"></div>
   </div>
+  <div class="version-tag" data-version-tag></div>
 </section>
 
 <button class="repeat-fab" onclick="repeatLastSpeech()" aria-label="Repeat last message">🔊</button>
@@ -288,6 +343,11 @@
 /* =========================================================
    STATE & STORAGE
 ========================================================= */
+const APP_VERSION = '4.3.0';
+const APP_BUILD_DATE = '11 Oct 2026';
+const APP_VERSION_LABEL = `Larder Ledger version ${APP_VERSION} · ${APP_BUILD_DATE}`;
+document.querySelectorAll('[data-version-tag]').forEach(el=>{ el.textContent = APP_VERSION_LABEL; });
+
 const K_ITEMS = 'larderLedger4.items';
 const K_HISTORY = 'larderLedger4.history';
 const K_SETTINGS = 'larderLedger4.settings';
@@ -925,6 +985,7 @@ function renderList(){
       <div class="imeta ${urg}">${it.dateType}: ${formatDatePretty(it.expiryDate)} — ${formatDaysLabel(it.expiryDate)}</div>
       ${it.notes?`<div class="hint">${escapeHtml(it.notes)}</div>`:''}
       <div class="actions">
+        <button onclick="editItem('${it.id}')">✏️ Edit</button>
         ${isNew?`<button onclick="dismissHighlight('${it.id}')">Dismiss highlight</button>`:''}
         <button onclick="deleteItem('${it.id}')">Delete</button>
       </div></div>`;
@@ -978,7 +1039,7 @@ function renderCalendar(){
         document.querySelectorAll('.cal-cell').forEach(c=>c.classList.remove('selected'));
         cell.classList.add('selected');
         document.getElementById('calDayDetail').innerHTML = `<div class="section-title" style="font-size:20px;">${formatDatePretty(iso)}</div>` +
-          dayItems.map(it=>`<div class="item-card ${isItemHighlighted(it)?'new-item':''}"><div class="iname">${escapeHtml(it.name)}</div><div class="imeta">${it.dateType}</div></div>`).join('');
+          dayItems.map(it=>`<div class="item-card ${isItemHighlighted(it)?'new-item':''}"><div class="iname">${escapeHtml(it.name)}</div><div class="imeta">${it.dateType}</div><div class="actions"><button onclick="editItem('${it.id}')">✏️ Edit</button></div></div>`).join('');
         speak(`${formatDatePretty(iso)}. ${dayItems.map(it=>it.name).join(', ')}.`);
       };
     }
@@ -1174,7 +1235,7 @@ async function renderReview(){
       <div class="thumb-row" id="thumbs-${it.id}"><span class="hint">Loading photos…</span></div>
       ${it.notes?`<div class="hint">${escapeHtml(it.notes)}</div>`:''}
       ${it.errorMsg?`<div class="hint" style="color:var(--danger);">${escapeHtml(it.errorMsg)}</div>`:''}
-      <div class="actions"><button onclick="deleteItem('${it.id}')">Delete</button></div>
+      <div class="actions"><button onclick="editItem('${it.id}')">✏️ Enter Details Myself</button><button onclick="deleteItem('${it.id}')">Delete</button></div>
     </div>`).join('');
   // Load thumbnails progressively so the list itself appears instantly
   items.forEach(async it=>{
@@ -1273,11 +1334,14 @@ function importReviewResults(event){
    PROCESS ALL (batch-run every Needs Review item through Gemini,
    used after a Quick Capture whole-shop session, or to retry failures)
 ========================================================= */
-function askQuickConfirmForItem(result){
+function askQuickConfirmForItem(result, photo){
   // Reuses the existing single-item confirm screen's Yes/No buttons for a moment,
   // then restores their normal click handlers afterwards so the live capture flow
   // (finishItemAndReturn / confirmDetection) keeps working as before.
+  // Optional `photo` (a data URL) is shown at the top so a sighted user can check it.
   return new Promise(resolve=>{
+    const photoEl = document.getElementById('confirmPhoto');
+    if(photo){ photoEl.src = photo; photoEl.style.display = 'block'; } else { photoEl.style.display = 'none'; }
     document.getElementById('confirmNameText').textContent = result.name || 'Not detected';
     document.getElementById('confirmDateText').textContent = result.expiryDate ? `${result.dateType||'Best Before'}: ${formatDatePretty(result.expiryDate)}` : 'Not detected';
     showScreen('confirm');
@@ -1287,7 +1351,7 @@ function askQuickConfirmForItem(result){
     const noBtn = document.querySelector('#screen-confirm .btn-no');
     const skipBtn = document.querySelector('#screen-confirm .bigbtn.small');
     const originalYes = yesBtn.onclick, originalNo = noBtn.onclick, originalSkip = skipBtn.onclick;
-    function cleanup(){ yesBtn.onclick = originalYes; noBtn.onclick = originalNo; skipBtn.onclick = originalSkip; }
+    function cleanup(){ yesBtn.onclick = originalYes; noBtn.onclick = originalNo; skipBtn.onclick = originalSkip; photoEl.style.display = 'none'; }
 
     yesBtn.onclick = ()=>{ cleanup(); speak('Saved.'); resolve({action:'confirm'}); };
     noBtn.onclick = ()=>{ cleanup(); speak('Kept for review.'); resolve({action:'reject'}); };
@@ -1366,6 +1430,392 @@ async function processAllReviewItems(){
   const msg = 'Processing finished. ' + (parts.length ? parts.join(', ') + '.' : 'Nothing was processed.');
   toast(msg);
   speak(msg);
+}
+
+/* =========================================================
+   MANUAL ENTRY (type or dictate an item instead of photographing it)
+========================================================= */
+let manualDateType = 'Best Before';
+
+function setManualType(t){
+  manualDateType = t;
+  const bb = document.getElementById('manualTypeBB'), ub = document.getElementById('manualTypeUB');
+  bb.classList.toggle('on', t==='Best Before'); bb.setAttribute('aria-pressed', t==='Best Before');
+  ub.classList.toggle('on', t==='Use By');      ub.setAttribute('aria-pressed', t==='Use By');
+}
+
+let manualEditId = null;        // set while editing an existing item, null while adding a new one
+let manualReturnScreen = 'home'; // where to go back to after saving/cancelling
+
+function resetManualForm(){
+  document.getElementById('manualName').value = '';
+  document.getElementById('manualDate').value = '';
+  document.getElementById('manualNotes').value = '';
+  document.getElementById('manualPhotos').innerHTML = '';
+  setManualType('Best Before');
+}
+
+// Switches the shared form between "Add an Item" and "Edit Item" wording/buttons
+function applyManualMode(){
+  const editing = !!manualEditId;
+  document.getElementById('manualTitle').textContent = editing ? 'Edit Item' : 'Add an Item';
+  document.getElementById('manualBtnSaveLabel').textContent = editing ? 'Save Changes' : 'Save Item';
+  document.getElementById('manualBtnAnother').style.display = editing ? 'none' : 'flex';
+  document.getElementById('manualBtnCancel').style.display = editing ? 'inline-block' : 'none';
+}
+
+function startManual(){
+  manualEditId = null;
+  manualReturnScreen = 'home';
+  resetManualForm();
+  startManualSuggestionsRefresh();
+  document.getElementById('manualDate').min = isoOf(new Date());
+  applyManualMode();
+  showScreen('manual');
+  speak('Add an item. Say or type the product name, choose Best Before or Use By, then pick the date.');
+}
+
+// Edit any saved item — one read from a photo, one typed in, or one still waiting in Needs Review
+async function editItem(id){
+  const it = state.items.find(i=>i.id===id);
+  if(!it){ toast('Could not find that item'); return; }
+  const active = document.querySelector('.screen.active');
+  manualReturnScreen = active ? active.id.replace('screen-','') : 'list';
+  if(manualReturnScreen==='manual' || manualReturnScreen==='confirm') manualReturnScreen = 'list';
+  manualEditId = id;
+  resetManualForm();
+  document.getElementById('manualName').value = it.name || '';
+  document.getElementById('manualDate').value = it.expiryDate || '';
+  document.getElementById('manualNotes').value = it.notes || '';
+  setManualType(it.dateType || 'Best Before');
+  startManualSuggestionsRefresh();
+  document.getElementById('manualDate').min = isoOf(new Date());
+  applyManualMode();
+  showScreen('manual');
+  const isReview = it.status === 'needs_review';
+  speak(isReview
+    ? 'Fill in this item by hand. The photos are shown at the top. Enter the product name and the date.'
+    : `Editing ${it.name}. Change anything you need, then tap Save Changes.`);
+  // Items still waiting for review keep their photos, so show them to read the date from
+  if(isReview && it.photoIds && it.photoIds.length){
+    const photos = (await idbGetPhotos(it.photoIds)).filter(Boolean);
+    if(manualEditId === id) document.getElementById('manualPhotos').innerHTML = photos.map(p=>`<img src="${p}">`).join('');
+  }
+}
+
+function cancelManual(){
+  manualEditId = null;
+  showScreen(manualReturnScreen || 'home');
+}
+
+function historyAdd(name){
+  const key = name.toLowerCase();
+  if(!state.history[key]) state.history[key] = {displayName:name, count:0, lastAdded:0};
+  state.history[key].count += 1;
+  state.history[key].lastAdded = Date.now();
+  state.history[key].displayName = name;
+}
+function historyRemove(name){
+  const key = (name||'').toLowerCase();
+  const h = state.history[key];
+  if(!h) return;
+  h.count -= 1;
+  if(h.count <= 0) delete state.history[key];
+}
+
+function saveManual(addAnother){
+  const name = document.getElementById('manualName').value.trim();
+  const date = document.getElementById('manualDate').value; // YYYY-MM-DD from the date picker
+  const notes = document.getElementById('manualNotes').value.trim();
+  if(!name){ toast('Please enter a product name'); speak('Please enter a product name.'); document.getElementById('manualName').focus(); return; }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ toast('Please choose the date'); speak('Please choose the date on the pack.'); return; }
+  if(daysUntil(date) < 0){ toast('That date has already passed'); speak('That date has already passed. Please check it.'); return; }
+
+  if(manualEditId){
+    const it = state.items.find(i=>i.id===manualEditId);
+    if(!it){ manualEditId = null; toast('That item no longer exists'); goHome(); return; }
+    const wasReview = it.status === 'needs_review';
+    const oldName = it.name;
+    it.name = name; it.dateType = manualDateType; it.expiryDate = date; it.notes = notes;
+    if(wasReview){
+      // Filled in by hand: now a normal item, and its photos are no longer needed
+      if(it.photoIds && it.photoIds.length) idbDeletePhotos(it.photoIds).catch(e=>console.error(e));
+      it.photoIds = []; it.errorMsg = null; it.status = 'confirmed';
+      historyAdd(name);
+    } else if((oldName||'').toLowerCase() !== name.toLowerCase()){
+      historyRemove(oldName);
+      historyAdd(name);
+    } else if(state.history[name.toLowerCase()]){
+      state.history[name.toLowerCase()].displayName = name; // keep any capitalisation fix
+    }
+    saveState();
+    manualEditId = null;
+    speak(`${name} updated. Due ${formatDatePretty(date)}.`);
+    toast('Changes saved');
+    showScreen(manualReturnScreen || 'list');
+    return;
+  }
+
+  saveAsConfirmed(uid(), [], notes, { name, dateType: manualDateType, expiryDate: date });
+  speak(`${name} saved. Due ${formatDatePretty(date)}.`);
+  toast('Item saved');
+  if(addAnother){
+    resetManualForm();
+    startManualSuggestionsRefresh();
+    document.getElementById('manualName').focus();
+  } else {
+    goHome();
+  }
+}
+function startManualSuggestionsRefresh(){
+  // Suggestions from things bought before, most frequent first
+  const names = Object.values(state.history).sort((a,b)=>b.count-a.count).map(h=>h.displayName).slice(0, 100);
+  document.getElementById('manualNameList').innerHTML = names.map(n=>`<option value="${escapeHtml(n).replace(/"/g,'&quot;')}"></option>`).join('');
+}
+
+/* =========================================================
+   BULK UPLOAD (pick many photos from the camera roll at once;
+   Gemini groups them into items — one or several photos per item —
+   and reads the name + date for each group)
+========================================================= */
+let bulkPhotos = [];    // data URLs still waiting to be read, in the order they were chosen
+const BULK_CHUNK = 10;  // photos sent to Gemini per request
+
+function startBulk(){
+  renderBulkUI();
+  showScreen('bulk');
+  speak(bulkPhotos.length
+    ? `${bulkPhotos.length} photos waiting. Tap Read All Photos, or choose more.`
+    : 'Bulk upload. Tap Choose Photos, then select all your shop photos in the order you took them.');
+}
+
+function bulkChoosePhotos(){ document.getElementById('bulkInput').click(); }
+
+document.getElementById('bulkInput').addEventListener('change', async e=>{
+  const files = Array.from(e.target.files || []);
+  e.target.value = '';
+  if(files.length===0) return;
+  let added = 0;
+  for(let i=0; i<files.length; i++){
+    showSpinner(`Loading photo ${i+1} of ${files.length}…`);
+    try{
+      const raw = await new Promise((resolve, reject)=>{
+        const r = new FileReader();
+        r.onload = ()=>resolve(r.result);
+        r.onerror = ()=>reject(r.error);
+        r.readAsDataURL(files[i]);
+      });
+      // downscale() never resolves if an image can't be decoded, so don't wait on it forever
+      const small = await Promise.race([
+        downscale(raw, 1200),
+        new Promise((_, reject)=>setTimeout(()=>reject(new Error('Photo took too long to load')), 15000))
+      ]);
+      bulkPhotos.push(small);
+      added++;
+    }catch(err){ console.error('Could not load a photo', err); }
+  }
+  hideSpinner();
+  renderBulkUI();
+  speak(`${added} photo${added===1?'':'s'} added. ${bulkPhotos.length} waiting to be read. Tap Read All Photos when you're ready.`);
+});
+
+function renderBulkUI(){
+  const n = bulkPhotos.length;
+  document.getElementById('bulkSummary').textContent = n===0
+    ? 'Pick all your shop photos from your camera roll in one go. Gemini works out which photos belong to the same item and reads each date for you.'
+    : `${n} photo${n===1?'':'s'} ready to read.`;
+  document.getElementById('bulkNoKey').innerHTML = settings.geminiKey ? '' : `<div class="warn-banner">⚠️ Add your Gemini key in Settings first — it is needed to read the photos.</div>`;
+  document.getElementById('bulkBtnRead').disabled = n===0 || !settings.geminiKey;
+  document.getElementById('bulkBtnClear').style.display = n===0 ? 'none' : 'inline-block';
+  const shown = bulkPhotos.slice(0, 60);
+  document.getElementById('bulkThumbs').innerHTML =
+    shown.map(p=>`<img src="${p}">`).join('') + (n>shown.length ? `<span class="hint">+ ${n-shown.length} more</span>` : '');
+}
+
+function bulkClear(){
+  if(!confirm('Remove all the photos you have chosen? Items already saved are not affected.')) return;
+  bulkPhotos = [];
+  renderBulkUI();
+}
+
+function buildBulkPrompt(n){
+  const todayStr = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  return `You are reading ${n} photos of food packaging from a UK supermarket delivery, listed in the order they were taken. Today's actual date is ${todayStr}.
+
+The photos are labelled "Photo 1" to "Photo ${n}". Some products have just one photo; others have several (for example the front of the pack, then the back or a close-up of the printed date). Group the photos into products:
+- Consecutive photos showing the same product belong to the same group.
+- A photo showing a different product starts a new group.
+- Every photo must appear in exactly one group.
+- If two consecutive photos show the same product with the same date, they are repeat shots of one pack — keep them in one group.
+
+For each group, read:
+1. The product name (brief, as printed on the pack)
+2. Whether the date is "Best Before" or "Use By"
+3. The date itself — it may be on a different photo in the group from the one showing the product name
+
+Important: UK packaging often prints only the day and month (e.g. "13 AUG") with no year. If no year is printed, assume the next upcoming occurrence of that day/month on or after today's date above — never a past year. These items have just been delivered, so dates are almost always in the near future.
+
+Respond with ONLY JSON, no other text, in exactly this format:
+{"items":[{"photos":[1,2],"name":"Product Name","dateType":"Best Before","expiryDate":"YYYY-MM-DD","confidence":"high"}]}
+
+Use "confidence": "low" if anything is blurry, not clearly legible, or you are guessing at the name, the date, or which photos belong together. Use null for name or expiryDate if you genuinely cannot determine it.`;
+}
+
+async function callGeminiBulk(photos){
+  const model = settings.geminiModel || 'gemini-3.6-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(settings.geminiKey)}`;
+  const parts = [{ text: buildBulkPrompt(photos.length) }];
+  photos.forEach((p, i)=>{
+    parts.push({ text: `Photo ${i+1}:` });
+    parts.push({ inline_data: { mime_type: 'image/jpeg', data: dataUrlToBase64(p) } });
+  });
+  const body = {
+    contents: [{ parts }],
+    generationConfig: { response_mime_type: 'application/json', temperature: 0.1 }
+  };
+  const controller = new AbortController();
+  const timeoutId = setTimeout(()=>controller.abort(), 90000); // bigger payload than a single item, so a longer allowance
+  let res;
+  try{
+    res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body), signal: controller.signal });
+  }catch(err){
+    if(err.name === 'AbortError'){
+      throw new Error('Gemini took too long to respond (over 90 seconds) — likely a weak connection. Try again with better signal or Wi-Fi.');
+    }
+    throw new Error('Could not reach Gemini: ' + err.message);
+  }finally{
+    clearTimeout(timeoutId);
+  }
+  if(!res.ok){
+    const errText = await res.text().catch(()=> '');
+    throw new Error(`Gemini request failed (${res.status}): ${errText.slice(0,200)}`);
+  }
+  const data = await res.json();
+  const text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+  if(!text) throw new Error('Gemini returned an unexpected response.');
+  let parsed;
+  try{ parsed = JSON.parse(text); }catch(e){ throw new Error('Gemini returned a reply that could not be understood.'); }
+  const list = Array.isArray(parsed) ? parsed : parsed && parsed.items;
+  if(!Array.isArray(list)) throw new Error('Gemini returned an unexpected response.');
+  return list;
+}
+
+// Tidies Gemini's grouping: valid unique photo numbers only, no photo in two groups,
+// and any photo Gemini forgot to mention becomes its own (unreadable) group.
+function normalizeBulkGroups(list, n){
+  const used = new Set();
+  const groups = [];
+  list.forEach(g=>{
+    const raw = Array.isArray(g.photos) ? g.photos : [];
+    const idxs = Array.from(new Set(raw.map(x=>parseInt(x,10)-1)))
+      .filter(i=>Number.isInteger(i) && i>=0 && i<n && !used.has(i))
+      .sort((a,b)=>a-b);
+    if(idxs.length===0) return;
+    idxs.forEach(i=>used.add(i));
+    groups.push({
+      idxs,
+      result: normalizeExpiryDate({
+        name: typeof g.name === 'string' && g.name.trim() ? g.name.trim() : null,
+        dateType: g.dateType || 'Best Before',
+        expiryDate: g.expiryDate || null,
+        confidence: g.confidence
+      })
+    });
+  });
+  for(let i=0; i<n; i++){ if(!used.has(i)) groups.push({ idxs:[i], result:null }); }
+  groups.sort((a,b)=>a.idxs[a.idxs.length-1] - b.idxs[b.idxs.length-1]);
+  return groups;
+}
+
+async function bulkReadAll(){
+  if(!settings.geminiKey){ toast('Add a Gemini key in Settings first'); speak('Please add a Gemini key in Settings first.'); return; }
+  if(bulkPhotos.length===0){ toast('Choose some photos first'); return; }
+
+  ensureOpenBatch();
+  let queue = bulkPhotos.slice();
+  const total = queue.length;
+  let stopped = false, failMsg = '';
+  let savedCount = 0, manualCount = 0, reviewCount = 0;
+  const uncertain = [];
+
+  spinnerCancelBtn = ()=>{ stopped = true; showSpinner('Finishing this batch, then stopping…'); };
+
+  while(queue.length>0 && !stopped){
+    const chunk = queue.slice(0, BULK_CHUNK);
+    const isLast = queue.length <= BULK_CHUNK;
+    const done = total - queue.length;
+    showSpinner(`Reading photos ${done+1}–${done+chunk.length} of ${total}…`, true, 'Stop after this batch');
+
+    let list = null, lastErr = null;
+    for(let attempt=0; attempt<2 && !list; attempt++){
+      try{ list = await callGeminiBulk(chunk); }
+      catch(err){ lastErr = err; console.error(err); }
+    }
+    if(!list){ failMsg = lastErr ? lastErr.message : 'Something went wrong.'; break; }
+
+    let groups = normalizeBulkGroups(list, chunk.length);
+
+    // The last group in a batch might carry on into the next batch (e.g. its back-of-pack photo is
+    // the first photo of the next 10), so hold it back and re-send it with the next batch.
+    let carryIdxs = [];
+    if(!isLast && groups.length>1){
+      const lastGroup = groups[groups.length-1];
+      if(lastGroup.idxs.length <= 5){ carryIdxs = lastGroup.idxs; groups = groups.slice(0, -1); }
+    }
+
+    for(const g of groups){
+      const gPhotos = g.idxs.map(i=>chunk[i]);
+      const r = g.result;
+      if(r && r.name && r.expiryDate && r.confidence === 'high'){
+        saveAsConfirmed(uid(), [], '', r);
+        savedCount++;
+      } else if(r && r.name && r.expiryDate){
+        uncertain.push({ result:r, photos:gPhotos });
+      } else {
+        await saveAsNeedsReview(uid(), gPhotos, '', 'Gemini could not read both the name and the date from these photos.');
+        reviewCount++;
+      }
+    }
+
+    queue = carryIdxs.map(i=>chunk[i]).concat(queue.slice(chunk.length));
+    bulkPhotos = queue.slice(); // keep what's left in sync, so a failure later never loses photos that weren't read yet
+  }
+
+  hideSpinner();
+  spinnerCancelBtn = null;
+
+  // Quick Yes/No for anything Gemini was unsure about — done after the network work,
+  // so you can start the reading and put the phone down.
+  let deferRest = false;
+  for(const u of uncertain){
+    if(!deferRest){
+      const outcome = await askQuickConfirmForItem(u.result, u.photos[0]);
+      if(outcome.action === 'confirm'){ saveAsConfirmed(uid(), [], '', u.result); manualCount++; continue; }
+      if(outcome.action === 'stop') deferRest = true;
+    }
+    await saveAsNeedsReview(uid(), u.photos, '', deferRest ? 'Not checked yet — Gemini was unsure about this one.' : 'Marked as incorrect during checking — needs manual review.');
+    reviewCount++;
+  }
+
+  const remaining = bulkPhotos.length;
+  if(remaining===0) state.batchOpen = false; // all done: close the batch so the next shop starts a fresh yellow highlight
+  saveState();
+  renderBulkUI();
+
+  const parts = [];
+  if(savedCount) parts.push(`${savedCount} saved automatically`);
+  if(manualCount) parts.push(`${manualCount} saved after checking with you`);
+  if(reviewCount) parts.push(`${reviewCount} need review`);
+  let msg = parts.length ? parts.join(', ') + '.' : 'Nothing was saved.';
+  if(remaining>0){
+    msg += ` ${remaining} photo${remaining===1?' is':'s are'} still waiting — tap Read All Photos to carry on.`;
+    showScreen('bulk');
+  } else {
+    showScreen(reviewCount>0 ? 'review' : 'list');
+  }
+  toast(msg);
+  speak('Bulk read finished. ' + msg);
+  if(failMsg) alert('Stopped early: ' + failMsg);
 }
 
 /* =========================================================
