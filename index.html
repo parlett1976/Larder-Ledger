@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Larder Ledger</title>
-<meta name="app-version" content="4.3.0">
-<!-- Larder Ledger v4.3.0 (11 Oct 2026): Edit any item + enter Needs Review items by hand. v4.2: Bulk Upload + Manual Entry. v4.1: Quick Capture. v4.0: IndexedDB photos, Gemini timeout/cancel. -->
+<meta name="app-version" content="4.4.0">
+<!-- Larder Ledger v4.4.0 (13 Oct 2026): Add dates to iPhone Calendar (.ics). v4.3: Edit any item + enter Needs Review items by hand. v4.2: Bulk Upload + Manual Entry. v4.1: Quick Capture. v4.0: IndexedDB photos, Gemini timeout/cancel. -->
 
 <style>
   :root{
@@ -270,6 +270,7 @@
   <div class="subtle">Items added in your latest round of photos are highlighted yellow until your next round.</div>
   <button class="bigbtn primary" onclick="generateCalendarReportPDF()"><span class="emoji">📅</span> Calendar Report (PDF, 4 weeks)</button>
   <button class="bigbtn primary" onclick="generateListReportPDF()"><span class="emoji">📋</span> List Report (PDF, 2 weeks)</button>
+  <button class="bigbtn accent" onclick="sendToCalendar()"><span class="emoji">📆</span> Add All Dates to iPhone Calendar</button>
   <div style="margin-top:20px;font-weight:700;font-size:var(--fs-base);">Export data</div>
   <button class="bigbtn small" onclick="exportDataJSON()"><span class="emoji">🗂️</span> Export as JSON</button>
   <button class="bigbtn small" onclick="exportDataExcel()"><span class="emoji">📊</span> Export as Excel</button>
@@ -343,8 +344,8 @@
 /* =========================================================
    STATE & STORAGE
 ========================================================= */
-const APP_VERSION = '4.3.0';
-const APP_BUILD_DATE = '11 Oct 2026';
+const APP_VERSION = '4.4.0';
+const APP_BUILD_DATE = '13 Oct 2026';
 const APP_VERSION_LABEL = `Larder Ledger version ${APP_VERSION} · ${APP_BUILD_DATE}`;
 document.querySelectorAll('[data-version-tag]').forEach(el=>{ el.textContent = APP_VERSION_LABEL; });
 
@@ -1202,6 +1203,66 @@ function exportDataWord(){
   </table>
   </body></html>`;
   downloadBlob(html, 'application/msword', `larder-ledger-export-${dateStamp()}.doc`);
+}
+
+/* =========================================================
+   CALENDAR EXPORT (.ics — opens in the iPhone Calendar app)
+========================================================= */
+function icsEscape(text){
+  return String(text||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+}
+function icsFold(line){
+  // Lines longer than 75 characters must be folded (continuation lines start with a space)
+  const out = [];
+  let rest = line;
+  while(rest.length > 70){ out.push(rest.slice(0,70)); rest = ' ' + rest.slice(70); }
+  out.push(rest);
+  return out.join('\r\n');
+}
+function icsDate(iso){ return iso.replace(/-/g,''); }
+function buildICS(){
+  const items = state.items.filter(it=>it.status==='confirmed' && it.name && it.expiryDate)
+    .sort((a,b)=>a.expiryDate.localeCompare(b.expiryDate));
+  const now = new Date();
+  const stamp = now.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''); // 20261013T210000Z
+  const seq = Math.floor(now.getTime()/60000); // rises with every export, so re-importing updates existing events instead of duplicating them
+  const lines = [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Larder Ledger//Food Dates//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH',
+    'X-WR-CALNAME:Larder Ledger'
+  ];
+  items.forEach(it=>{
+    const next = isoOf(addDays(new Date(it.expiryDate+'T00:00:00'), 1));
+    const label = (it.dateType==='Use By' ? 'Use by' : 'Best before') + ': ' + it.name;
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:${it.id}@larderledger`);
+    lines.push(`DTSTAMP:${stamp}`);
+    lines.push(`LAST-MODIFIED:${stamp}`);
+    lines.push(`SEQUENCE:${seq}`);
+    lines.push(`DTSTART;VALUE=DATE:${icsDate(it.expiryDate)}`);
+    lines.push(`DTEND;VALUE=DATE:${icsDate(next)}`);
+    lines.push(`SUMMARY:${icsEscape(label)}`);
+    if(it.notes) lines.push(`DESCRIPTION:${icsEscape(it.notes)}`);
+    lines.push('TRANSP:TRANSPARENT'); // all-day food dates shouldn't make you look "busy"
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  return { text: lines.map(icsFold).join('\r\n') + '\r\n', count: items.length };
+}
+async function sendToCalendar(){
+  const { text, count } = buildICS();
+  if(count===0){ toast('Nothing to add yet'); speak('You have no confirmed items to add to the calendar yet.'); return; }
+  const fileName = 'larder-ledger-food-dates.ics';
+  const file = new File([text], fileName, {type:'text/calendar'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      speak(`${count} item${count===1?'':'s'} ready. Choose Calendar, then tap Add All.`);
+      await navigator.share({ files:[file], title:'Larder Ledger food dates' });
+      return;
+    }catch(err){ if(err.name==='AbortError') return; console.error(err); }
+  }
+  // Fallback: download the file — open it from Downloads/Files and tap Add All
+  downloadBlob(text, 'text/calendar', fileName);
+  speak(`${count} item${count===1?'':'s'} saved as a calendar file. Open it from your Downloads, then tap Add All.`);
 }
 
 /* =========================================================
