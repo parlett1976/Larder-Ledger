@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Larder Ledger</title>
-<meta name="app-version" content="4.4.0">
-<!-- Larder Ledger v4.4.0 (13 Oct 2026): Add dates to iPhone Calendar (.ics). v4.3: Edit any item + enter Needs Review items by hand. v4.2: Bulk Upload + Manual Entry. v4.1: Quick Capture. v4.0: IndexedDB photos, Gemini timeout/cancel. -->
+<meta name="app-version" content="4.5.0">
+<!-- Larder Ledger v4.5.0 (14 Oct 2026): Calendar button opens the .ics directly (share-sheet kept as backup). v4.4: Add dates to iPhone Calendar (.ics). v4.3: Edit any item + enter Needs Review items by hand. v4.2: Bulk Upload + Manual Entry. v4.1: Quick Capture. v4.0: IndexedDB photos, Gemini timeout/cancel. -->
 
 <style>
   :root{
@@ -271,6 +271,7 @@
   <button class="bigbtn primary" onclick="generateCalendarReportPDF()"><span class="emoji">📅</span> Calendar Report (PDF, 4 weeks)</button>
   <button class="bigbtn primary" onclick="generateListReportPDF()"><span class="emoji">📋</span> List Report (PDF, 2 weeks)</button>
   <button class="bigbtn accent" onclick="sendToCalendar()"><span class="emoji">📆</span> Add All Dates to iPhone Calendar</button>
+  <button class="bigbtn small" onclick="shareCalendarFile()"><span class="emoji">📎</span> Calendar didn't open? Send as a file instead</button>
   <div style="margin-top:20px;font-weight:700;font-size:var(--fs-base);">Export data</div>
   <button class="bigbtn small" onclick="exportDataJSON()"><span class="emoji">🗂️</span> Export as JSON</button>
   <button class="bigbtn small" onclick="exportDataExcel()"><span class="emoji">📊</span> Export as Excel</button>
@@ -344,8 +345,8 @@
 /* =========================================================
    STATE & STORAGE
 ========================================================= */
-const APP_VERSION = '4.4.0';
-const APP_BUILD_DATE = '13 Oct 2026';
+const APP_VERSION = '4.5.0';
+const APP_BUILD_DATE = '14 Oct 2026';
 const APP_VERSION_LABEL = `Larder Ledger version ${APP_VERSION} · ${APP_BUILD_DATE}`;
 document.querySelectorAll('[data-version-tag]').forEach(el=>{ el.textContent = APP_VERSION_LABEL; });
 
@@ -1248,19 +1249,34 @@ function buildICS(){
   lines.push('END:VCALENDAR');
   return { text: lines.map(icsFold).join('\r\n') + '\r\n', count: items.length };
 }
-async function sendToCalendar(){
+// Main button: hand the calendar data straight to the iPhone, which offers "Add All" to Calendar.
+function sendToCalendar(){
   const { text, count } = buildICS();
   if(count===0){ toast('Nothing to add yet'); speak('You have no confirmed items to add to the calendar yet.'); return; }
+  const url = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(text);
+  let opened = null;
+  try{ opened = window.open(url, '_blank'); }catch(err){ console.error(err); }
+  if(opened){
+    speak(`${count} item${count===1?'':'s'} ready. Tap Add All to put them in your calendar.`);
+  } else {
+    // Pop-up blocked or unsupported — fall back to the share sheet / download
+    shareCalendarFile();
+  }
+}
+
+// Backup route: share the .ics as a file (Save to Files, email it to yourself, etc.)
+async function shareCalendarFile(){
+  const { text, count } = buildICS();
+  if(count===0){ toast('Nothing to add yet'); return; }
   const fileName = 'larder-ledger-food-dates.ics';
   const file = new File([text], fileName, {type:'text/calendar'});
   if(navigator.canShare && navigator.canShare({files:[file]})){
     try{
-      speak(`${count} item${count===1?'':'s'} ready. Choose Calendar, then tap Add All.`);
+      speak(`${count} item${count===1?'':'s'} ready. Choose Save to Files, then open the file and tap Add All.`);
       await navigator.share({ files:[file], title:'Larder Ledger food dates' });
       return;
     }catch(err){ if(err.name==='AbortError') return; console.error(err); }
   }
-  // Fallback: download the file — open it from Downloads/Files and tap Add All
   downloadBlob(text, 'text/calendar', fileName);
   speak(`${count} item${count===1?'':'s'} saved as a calendar file. Open it from your Downloads, then tap Add All.`);
 }
