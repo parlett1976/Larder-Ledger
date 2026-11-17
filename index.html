@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Larder Ledger</title>
-<meta name="app-version" content="4.5.2">
-<!-- Larder Ledger v4.5.2 (17 Nov 2026): Gemini 503/busy errors now retry automatically (same model twice, then a backup model). v4.5.1 (14 Oct 2026): Calendar events show the item name, with (BB) after Best Before items; calendar button now goes straight to Send-as-file (Mail it to yourself). v4.5.0: direct open (didn't work on iOS). v4.4: Add dates to iPhone Calendar (.ics). v4.3: Edit any item + enter Needs Review items by hand. v4.2: Bulk Upload + Manual Entry. v4.1: Quick Capture. v4.0: IndexedDB photos, Gemini timeout/cancel. -->
+<meta name="app-version" content="4.5.3">
+<!-- Larder Ledger v4.5.3 (17 Nov 2026): Bulk read shows 'Gemini is busy, try N of 4' and Stop now cancels immediately (photos kept). v4.5.2 (17 Nov 2026): Gemini 503/busy errors now retry automatically (same model twice, then a backup model). v4.5.1 (14 Oct 2026): Calendar events show the item name, with (BB) after Best Before items; calendar button now goes straight to Send-as-file (Mail it to yourself). v4.5.0: direct open (didn't work on iOS). v4.4: Add dates to iPhone Calendar (.ics). v4.3: Edit any item + enter Needs Review items by hand. v4.2: Bulk Upload + Manual Entry. v4.1: Quick Capture. v4.0: IndexedDB photos, Gemini timeout/cancel. -->
 
 <style>
   :root{
@@ -345,7 +345,7 @@
 /* =========================================================
    STATE & STORAGE
 ========================================================= */
-const APP_VERSION = '4.5.2';
+const APP_VERSION = '4.5.3';
 const APP_BUILD_DATE = '17 Nov 2026';
 const APP_VERSION_LABEL = `Larder Ledger version ${APP_VERSION} · ${APP_BUILD_DATE}`;
 document.querySelectorAll('[data-version-tag]').forEach(el=>{ el.textContent = APP_VERSION_LABEL; });
@@ -722,23 +722,29 @@ If you genuinely cannot determine the name or date at all, use null for that fie
 const GEMINI_BACKUP_MODEL = 'gemini-2.5-flash';
 const GEMINI_RETRY_CODES = [429, 500, 502, 503, 504];
 function sleepMs(ms){ return new Promise(r=>setTimeout(r, ms)); }
+let geminiCancelled = false, geminiController = null;
+function cancelGemini(){ geminiCancelled = true; try{ if(geminiController) geminiController.abort(); }catch(e){} }
 async function geminiFetch(body, timeoutMs, seconds){
   const primary = settings.geminiModel || 'gemini-3.6-flash';
   const models = [primary, primary, GEMINI_BACKUP_MODEL, GEMINI_BACKUP_MODEL];
   if(primary === GEMINI_BACKUP_MODEL) models.length = 3;
   let lastErr = null;
+  geminiCancelled = false;
   for(let i=0; i<models.length; i++){
     if(i>0){
-      try{ toast('Gemini is busy — trying again…'); }catch(e){}
+      setSpinnerStatus(`Gemini is busy — trying again (try ${i+1} of ${models.length})…`);
       await sleepMs(i===2 ? 2000 : 4000);
     }
+    if(geminiCancelled) throw new Error('Cancelled');
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${models[i]}:generateContent?key=${encodeURIComponent(settings.geminiKey)}`;
     const controller = new AbortController();
+    geminiController = controller;
     const timeoutId = setTimeout(()=>controller.abort(), timeoutMs);
     let res;
     try{
       res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body), signal: controller.signal });
     }catch(err){
+      if(geminiCancelled) throw new Error('Cancelled');
       if(err.name === 'AbortError'){
         lastErr = new Error('Gemini took too long to respond (over '+seconds+' seconds) — likely a weak connection. Try again with better signal or Wi-Fi.');
       } else {
@@ -856,7 +862,7 @@ async function finishItemAndReturn(){
 
     let cancelled = false;
     spinnerCancelBtn = async ()=>{
-      cancelled = true;
+      cancelled = true; cancelGemini();
       try{ await saveAsNeedsReview(itemId, photos, notes, 'Cancelled by user after Gemini took too long.'); }catch(e){ console.error(e); }
       speak('Cancelled. Queued for your computer instead.');
       startNewItem(); showScreen('home'); refreshHome();
@@ -1464,7 +1470,7 @@ async function processAllReviewItems(){
   let stopped = false;
   let confirmedCount = 0, manualConfirmedCount = 0, failedCount = 0;
 
-  spinnerCancelBtn = ()=>{ stopped = true; };
+  spinnerCancelBtn = ()=>{ stopped = true; cancelGemini(); };
 
   for(let i=0; i<items.length; i++){
     if(stopped) break;
@@ -1817,19 +1823,24 @@ async function bulkReadAll(){
   let savedCount = 0, manualCount = 0, reviewCount = 0;
   const uncertain = [];
 
-  spinnerCancelBtn = ()=>{ stopped = true; showSpinner('Finishing this batch, then stopping…'); };
+  spinnerCancelBtn = ()=>{ stopped = true; cancelGemini(); };
 
   while(queue.length>0 && !stopped){
     const chunk = queue.slice(0, BULK_CHUNK);
     const isLast = queue.length <= BULK_CHUNK;
     const done = total - queue.length;
-    showSpinner(`Reading photos ${done+1}–${done+chunk.length} of ${total}…`, true, 'Stop after this batch');
+    showSpinner(`Reading photos ${done+1}–${done+chunk.length} of ${total}…`, true, 'Stop now (photos are kept)');
 
     let list = null, lastErr = null;
-    for(let attempt=0; attempt<2 && !list; attempt++){
+    for(let attempt=0; attempt<2 && !list && !stopped; attempt++){
       try{ list = await callGeminiBulk(chunk); }
-      catch(err){ lastErr = err; console.error(err); }
+      catch(err){
+        lastErr = err; console.error(err);
+        // Busy/timeout errors were already retried inside geminiFetch, so only retry odd replies here.
+        if(/Gemini request failed|took too long|Could not reach|Cancelled/.test(err.message)) break;
+      }
     }
+    if(stopped && !list){ break; }
     if(!list){ failMsg = lastErr ? lastErr.message : 'Something went wrong.'; break; }
 
     let groups = normalizeBulkGroups(list, chunk.length);
@@ -1961,6 +1972,7 @@ function showSpinner(msg, allowCancel, cancelLabel){
     document.body.appendChild(el);
   }
   document.getElementById('spinnerMsg').textContent = msg;
+  setSpinnerStatus('');
   const cancelWrap = document.getElementById('spinnerCancelWrap');
   cancelWrap.innerHTML = '';
   if(allowCancel){
@@ -1971,6 +1983,16 @@ function showSpinner(msg, allowCancel, cancelLabel){
     cancelWrap.appendChild(btn);
   }
   el.style.display = 'flex';
+}
+function setSpinnerStatus(text){
+  const msgEl = document.getElementById('spinnerMsg'); if(!msgEl) return;
+  let st = document.getElementById('spinnerStatus');
+  if(!st){
+    st = document.createElement('div'); st.id = 'spinnerStatus';
+    st.style.cssText = 'margin-top:8px;font-size:16px;font-weight:600;opacity:.9;text-align:center;padding:0 20px;';
+    msgEl.insertAdjacentElement('afterend', st);
+  }
+  st.textContent = text || '';
 }
 function hideSpinner(){ const el=document.getElementById('spinnerOverlay'); if(el) el.style.display='none'; }
 
